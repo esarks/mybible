@@ -2,201 +2,338 @@
 
 ## Project Overview
 
-**MyBible** is a personal Bible study application being built as a Google Cloud-based application using the JAC (Java Architects Companion) RAD framework. The application provides comprehensive Bible study tools including passage lookup, multiple translations, personal notes, and accompanying study resources.
+**MyBible** is a personal Bible study application built using the JAC (Java Architects Companion) RAD framework, following the proven patterns from **AllowanceAlley**. The application provides comprehensive Bible study tools including passage lookup, multiple translations, personal notes, and accompanying study resources.
 
-This project leverages JAC's powerful template engine, dynamic compilation, and extensive library support to create a production-ready REST API backend with Google Cloud services integration.
+This project uses JAC's 6 generators (DDL, JEO, Service, Report, Frame, Dtable) and the MakeAll workflow to create a production-ready REST API backend deployed to Google Cloud Run.
 
-## Application Scope
+---
 
-### Business Domain
-Personal Bible study and reference system with:
-- **Passage Lookup**: Search and navigate Bible passages by book, chapter, and verse
-- **Multiple Translations**: Support for various Bible translations (KJV, NIV, ESV, NASB, etc.)
-- **Personal Notes**: Create, edit, and organize study notes linked to passages
-- **Cross-References**: Navigate related passages and cross-references
-- **Search**: Full-text search across translations and notes
-- **Bookmarks & Highlights**: Mark favorite passages and highlight text
-- **Study Resources**: Commentaries, concordance, and supplemental materials
-- **Reading Plans**: Track daily reading progress
+## Reference Implementation: AllowanceAlley
 
-### Target Architecture (3-Tier)
-```
-┌────────────────────────────────────────────┐
-│  PRESENTATION TIER (Clients)               │
-│  - Web App (HTML/JavaScript) [PRIMARY]     │
-│  - Progressive Web App (PWA)               │
-│  - Mobile App (future)                     │
-└──────────────────┬─────────────────────────┘
-                   │ REST API
-┌──────────────────▼─────────────────────────┐
-│  APPLICATION TIER (JAC/Google Cloud Run)   │
-│  ┌──────────────────────────────────────┐  │
-│  │ REST API Endpoints                   │  │
-│  │  - Authentication (Firebase/JWT)     │  │
-│  │  - Passage Retrieval                 │  │
-│  │  - Notes CRUD                        │  │
-│  │  - Search                            │  │
-│  │  - Bookmarks & Highlights            │  │
-│  │  - Reading Plans                     │  │
-│  └──────────────────────────────────────┘  │
-│  ┌──────────────────────────────────────┐  │
-│  │ Business Logic Layer                 │  │
-│  │  - User Authorization                │  │
-│  │  - Search Indexing                   │  │
-│  │  - Note Organization                 │  │
-│  └──────────────────────────────────────┘  │
-└──────────────────┬─────────────────────────┘
-                   │ JDBC / Google APIs
-┌──────────────────▼─────────────────────────┐
-│  DATA TIER (Google Cloud)                  │
-│  - Cloud SQL (PostgreSQL) - User data      │
-│  - Cloud Storage - Bible text files        │
-│  - Cloud Firestore - Real-time sync (opt)  │
-└────────────────────────────────────────────┘
-```
+MyBible follows the **AllowanceAlley** architecture patterns:
+- **Location**: `jac2024/app/com/allowancealley/`
+- **Documentation**: `jac2024/app/com/allowancealley/CLAUDE.md`
+- **Patterns Guide**: `jac2024/app/com/allowancealley/jac-patterns.md`
 
-## Database Schema Summary
+### Key AllowanceAlley Patterns to Follow
 
-The application uses **core tables** in PostgreSQL (Cloud SQL):
+1. **Monolithic Router** - Single `MyBibleRouter.script` (~10K+ lines) containing all REST endpoints
+2. **JEO + CRUD Pattern** - Generated entity objects with CRUD operations
+3. **JWT Authentication** - Stateless authentication with HS256 tokens
+4. **ServiceJeo Pattern** - Request/response wrapper for database operations
+5. **Row-Level Security** - All queries include user_id in WHERE clause
+6. **HTML + JSON APIs** - Support both web forms and REST JSON responses
+7. **6-Phase Build** - Multi-phase compilation with MakeAll orchestration
 
-| Table | Purpose | Key Fields |
-|-------|---------|------------|
-| `users` | User accounts | id, email, name, created_at |
-| `translations` | Bible translation metadata | id, code, name, language, copyright |
-| `books` | Bible book metadata | id, translation_id, name, abbreviation, testament, order_num |
-| `chapters` | Chapter metadata | id, book_id, chapter_num, verse_count |
-| `verses` | Bible verse text | id, chapter_id, verse_num, text |
-| `notes` | User study notes | id, user_id, passage_ref, content, created_at, updated_at |
-| `bookmarks` | User bookmarks | id, user_id, passage_ref, label, created_at |
-| `highlights` | Text highlights | id, user_id, passage_ref, color, created_at |
-| `reading_plans` | Reading plan definitions | id, name, description, duration_days |
-| `reading_plan_entries` | Daily readings | id, plan_id, day_num, passage_ref |
-| `user_reading_progress` | User's plan progress | id, user_id, plan_id, current_day, last_read_date |
-| `cross_references` | Cross-reference links | id, source_ref, target_ref |
-| `tags` | Note/bookmark tags | id, user_id, name |
-| `note_tags` | Note-tag associations | note_id, tag_id |
+---
 
-### Passage Reference Format
-```
-{book_abbrev}.{chapter}.{verse}[-{end_verse}]
-Examples:
-  - Gen.1.1       (Genesis 1:1)
-  - John.3.16     (John 3:16)
-  - Ps.23.1-6     (Psalm 23:1-6)
-  - Rom.8.28-39   (Romans 8:28-39)
+## Bible Data Sources (Available)
+
+### Included Bible Translations
+
+The project includes **10 Bible translation files** in the `bibles/` folder, loaded from `my-bible-app`:
+
+| File | Translation | Size | Description |
+|------|-------------|------|-------------|
+| `kjv.json` | King James Version | ~4.5 MB | Public domain (1611/1769) |
+| `asv.json` | American Standard Version | ~4.3 MB | Public domain (1901) |
+| `web.json` | World English Bible | ~4.4 MB | Public domain |
+| `bbe.json` | Bible in Basic English | ~3.8 MB | Public domain |
+| `darby.json` | Darby Translation | ~4.2 MB | Public domain |
+| `ylt.json` | Young's Literal Translation | ~4.3 MB | Public domain |
+| `webbe.json` | WEB British Edition | ~4.4 MB | Public domain |
+| `oeb-us.json` | Open English Bible (US) | ~2.1 MB | Public domain |
+| `oeb-cw.json` | Open English Bible (Commonwealth) | ~2.1 MB | Public domain |
+| `clementine.json` | Clementine Vulgate (Latin) | ~4.1 MB | Public domain |
+
+### Bible JSON Format
+
+Each JSON file contains a **flat array of verses**:
+
+```json
+[
+  {
+    "book_name": "Genesis",
+    "chapter": 1,
+    "verse": 1,
+    "text": "In the beginning God created the heaven and the earth."
+  },
+  {
+    "book_name": "Genesis",
+    "chapter": 1,
+    "verse": 2,
+    "text": "And the earth was without form, and void; and darkness was upon the face of the deep..."
+  }
+]
 ```
 
-## Google Cloud Services
+### Field Definitions
 
-### Cloud Run
-- Hosts the JAC application as a containerized service
-- Auto-scaling based on traffic
-- HTTPS endpoint with custom domain support
+| Field | Type | Description |
+|-------|------|-------------|
+| `book_name` | String | Full book name (e.g., "Genesis", "1 Corinthians") |
+| `chapter` | Integer | Chapter number (1-based) |
+| `verse` | Integer | Verse number (1-based) |
+| `text` | String | Full verse text |
 
-### Cloud SQL (PostgreSQL)
-- User data: notes, bookmarks, highlights, reading progress
-- Bible metadata and potentially full text (or use Cloud Storage)
-- Connection via Cloud SQL Proxy or private IP
+### Bible Statistics
 
-### Cloud Storage
-- Bible translation files (if not in database)
-- User uploads (if needed)
-- Static assets for web client
+- **66 Books** (39 OT + 27 NT)
+- **1,189 Chapters**
+- **31,102 Verses** (KJV count)
+- **~4.5 MB** per translation (uncompressed JSON)
 
-### Firebase Authentication (Optional)
-- Google Sign-In
-- Email/Password authentication
-- JWT token validation
+---
 
-### Cloud Firestore (Optional)
-- Real-time sync across devices
-- Offline-first capability for PWA
-
-## JAC Implementation Approach
-
-### Why JAC?
-
-JAC provides ideal capabilities for this project:
-
-1. **Database Integration**: Native PostgreSQL support via JDBC
-2. **REST API Development**: Jetty embedded server with servlet support
-3. **JSON Processing**: Built-in XML/JSON parsing and generation
-4. **Template Engine**: Mix Java code with JAC directives for clean code generation
-5. **Dynamic Compilation**: Rapid development cycle with automatic compilation
-6. **Google Cloud Compatible**: Containerized deployment to Cloud Run
-
-### JAC Script Structure
-
-MyBible will use the following JAC component structure:
+## Project Structure (AllowanceAlley Pattern)
 
 ```
 app/com/mybible/
-├── CLAUDE.md                    # This file
-├── specs/
-│   └── requirements.md          # Detailed requirements
-├── server/
-│   ├── MyBibleServer.script     # Main Jetty server bootstrap
-│   └── Config.script            # Configuration loader
-├── api/
-│   ├── auth/
-│   │   ├── LoginEndpoint.script
-│   │   └── TokenValidation.script
-│   ├── passages/
-│   │   ├── GetPassageEndpoint.script
-│   │   ├── SearchEndpoint.script
-│   │   └── CrossRefEndpoint.script
-│   ├── notes/
-│   │   ├── NotesEndpoint.script
-│   │   └── TagsEndpoint.script
-│   ├── bookmarks/
-│   │   ├── BookmarksEndpoint.script
-│   │   └── HighlightsEndpoint.script
-│   └── reading/
-│       ├── PlansEndpoint.script
-│       └── ProgressEndpoint.script
-├── services/
-│   ├── PassageService.script
-│   ├── SearchService.script
-│   ├── NotesService.script
-│   ├── BookmarkService.script
-│   └── ReadingPlanService.script
-├── db/
-│   ├── DatabaseInit.script      # Schema creation
-│   ├── PassageRepo.script
-│   ├── NotesRepo.script
-│   ├── BookmarkRepo.script
-│   └── ReadingPlanRepo.script
-├── util/
-│   ├── JWTUtil.script
-│   ├── PassageRefParser.script
-│   └── JsonUtil.script
-├── data/
-│   ├── translations/            # Bible translation data
-│   ├── crossrefs/               # Cross-reference data
-│   └── test/                    # Sample data for testing
-├── config/
-│   ├── Properties.xml           # Database/server config
-│   └── Properties-dev.xml       # Development config
-├── docker/
-│   ├── Dockerfile               # Container build
-│   └── docker-compose.yml       # Local development
-└── deploy/
-    ├── cloudbuild.yaml          # Cloud Build config
-    └── cloud-run-deploy.md      # Deployment instructions
+├── CLAUDE.md                      # This documentation file
+├── jac-patterns.md                # JAC syntax patterns for this project
+│
+├── bin/                           # Build scripts (6-phase pipeline)
+│   ├── allPhases.bat              # Master build orchestrator
+│   ├── phase1.bat                 # Clean build
+│   ├── phase2.bat                 # Generate data layer
+│   ├── phase3.bat                 # Compile generators
+│   ├── phase3.5.bat               # Execute generators
+│   ├── phase3.55.bat              # Compile utilities
+│   ├── phase3.6.bat               # Recompile server
+│   └── SetMyBible.bat             # Environment setup
+│
+├── config/                        # Runtime configuration
+│   └── properties/
+│       ├── Properties.xml         # Main configuration
+│       └── Properties-docker.xml  # Docker-specific config
+│
+├── data/                          # Data layer (JEO + CRUD generation)
+│   ├── MyBibleMake.xml            # MakeAll component inventory
+│   ├── MyBibleDdl.xml             # Database schema definitions
+│   │
+│   ├── AUTH_USERS.new             # Generated JEO for users
+│   ├── AUTH_USERSCrud.new         # Generated CRUD operations
+│   ├── TRANSLATIONS.new           # Bible translation metadata
+│   ├── TRANSLATIONSCrud.new
+│   ├── BOOKS.new                  # Bible book metadata
+│   ├── BOOKSCrud.new
+│   ├── VERSES.new                 # Bible verse text
+│   ├── VERSESCrud.new
+│   ├── NOTES.new                  # User study notes
+│   ├── NOTESCrud.new
+│   ├── BOOKMARKS.new              # User bookmarks
+│   ├── BOOKMARKSCrud.new
+│   ├── HIGHLIGHTS.new             # User highlights
+│   ├── HIGHLIGHTSCrud.new
+│   ├── READING_PLANS.new          # Reading plan definitions
+│   ├── READING_PLANSCrud.new
+│   ├── USER_READING_PROGRESS.new  # User's plan progress
+│   ├── USER_READING_PROGRESSCrud.new
+│   ├── TAGS.new                   # Note/bookmark tags
+│   ├── TAGSCrud.new
+│   └── ACTIVITY_LEDGER.new        # Audit trail
+│
+├── server/                        # REST API server
+│   └── MyBibleRouter.script       # Main Jetty router (all endpoints)
+│
+├── util/                          # Utility classes (Java)
+│   ├── HashUtil.java              # SHA-256 password hashing
+│   ├── JWTUtil.java               # JWT token generation/validation
+│   ├── JsonUtil.java              # JSON parsing/generation
+│   ├── RequestContext.java        # Authentication context extraction
+│   ├── RequestLogger.java         # Request/response logging
+│   ├── BibleLoader.java           # Load Bible JSON files
+│   └── PassageParser.java         # Parse passage references
+│
+├── bibles/                        # Bible translation JSON files
+│   ├── kjv.json                   # King James Version
+│   ├── asv.json                   # American Standard Version
+│   ├── web.json                   # World English Bible
+│   ├── bbe.json                   # Bible in Basic English
+│   ├── darby.json                 # Darby Translation
+│   ├── ylt.json                   # Young's Literal Translation
+│   ├── webbe.json                 # WEB British Edition
+│   ├── oeb-us.json                # Open English Bible (US)
+│   ├── oeb-cw.json                # Open English Bible (Commonwealth)
+│   └── clementine.json            # Clementine Vulgate (Latin)
+│
+├── docker/                        # Docker deployment
+│   ├── Dockerfile                 # Container build
+│   ├── docker-compose.yml         # Local dev orchestration
+│   ├── docker-entrypoint.sh       # Container startup
+│   └── .env.template              # Environment variables template
+│
+└── deploy/                        # Google Cloud deployment
+    ├── cloudbuild.yaml            # Cloud Build config
+    └── cloud-run-deploy.md        # Deployment instructions
 ```
 
-## API Design
+---
 
-### Endpoint Summary
+## Database Schema (11 Tables)
+
+### Schema Design (MyBibleDdl.xml)
+
+```xml
+<schemas>
+  <!-- User Authentication -->
+  <table name="AUTH_USERS">
+    <column name="ID" type="UUID" primary="true" default="gen_random_uuid()"/>
+    <column name="EMAIL" type="VARCHAR" size="255" required="true" unique="true"/>
+    <column name="PASSWORD_HASH" type="VARCHAR" size="64" required="true"/>
+    <column name="NAME" type="VARCHAR" size="255"/>
+    <column name="CREATED_AT" type="TIMESTAMP" default="NOW()"/>
+    <column name="LAST_LOGIN" type="TIMESTAMP"/>
+    <column name="EMAIL_VERIFIED" type="BOOLEAN" default="false"/>
+  </table>
+
+  <!-- Bible Translation Metadata -->
+  <table name="TRANSLATIONS">
+    <column name="ID" type="UUID" primary="true"/>
+    <column name="CODE" type="VARCHAR" size="20" required="true" unique="true"/>
+    <column name="NAME" type="VARCHAR" size="255" required="true"/>
+    <column name="LANGUAGE" type="VARCHAR" size="50"/>
+    <column name="COPYRIGHT" type="TEXT"/>
+    <column name="VERSE_COUNT" type="INTEGER"/>
+  </table>
+
+  <!-- Bible Book Metadata -->
+  <table name="BOOKS">
+    <column name="ID" type="UUID" primary="true"/>
+    <column name="TRANSLATION_ID" type="UUID" foreignKey="TRANSLATIONS(ID)"/>
+    <column name="NAME" type="VARCHAR" size="100" required="true"/>
+    <column name="ABBREVIATION" type="VARCHAR" size="10"/>
+    <column name="TESTAMENT" type="VARCHAR" size="10"/> <!-- OT or NT -->
+    <column name="ORDER_NUM" type="INTEGER"/>
+    <column name="CHAPTER_COUNT" type="INTEGER"/>
+  </table>
+
+  <!-- Bible Verses (Optional - can load from JSON) -->
+  <table name="VERSES">
+    <column name="ID" type="UUID" primary="true"/>
+    <column name="TRANSLATION_ID" type="UUID" foreignKey="TRANSLATIONS(ID)"/>
+    <column name="BOOK_NAME" type="VARCHAR" size="100"/>
+    <column name="CHAPTER" type="INTEGER"/>
+    <column name="VERSE" type="INTEGER"/>
+    <column name="TEXT" type="TEXT"/>
+    <index name="idx_verses_lookup" columns="TRANSLATION_ID,BOOK_NAME,CHAPTER,VERSE"/>
+  </table>
+
+  <!-- User Study Notes -->
+  <table name="NOTES">
+    <column name="ID" type="UUID" primary="true" default="gen_random_uuid()"/>
+    <column name="USER_ID" type="UUID" foreignKey="AUTH_USERS(ID)" onDelete="CASCADE"/>
+    <column name="PASSAGE_REF" type="VARCHAR" size="100"/> <!-- e.g., "John.3.16" -->
+    <column name="TITLE" type="VARCHAR" size="255"/>
+    <column name="CONTENT" type="TEXT"/>
+    <column name="CREATED_AT" type="TIMESTAMP" default="NOW()"/>
+    <column name="UPDATED_AT" type="TIMESTAMP"/>
+    <index name="idx_notes_user" columns="USER_ID"/>
+    <index name="idx_notes_passage" columns="PASSAGE_REF"/>
+  </table>
+
+  <!-- User Bookmarks -->
+  <table name="BOOKMARKS">
+    <column name="ID" type="UUID" primary="true" default="gen_random_uuid()"/>
+    <column name="USER_ID" type="UUID" foreignKey="AUTH_USERS(ID)" onDelete="CASCADE"/>
+    <column name="PASSAGE_REF" type="VARCHAR" size="100"/>
+    <column name="LABEL" type="VARCHAR" size="255"/>
+    <column name="CREATED_AT" type="TIMESTAMP" default="NOW()"/>
+    <index name="idx_bookmarks_user" columns="USER_ID"/>
+  </table>
+
+  <!-- User Highlights -->
+  <table name="HIGHLIGHTS">
+    <column name="ID" type="UUID" primary="true" default="gen_random_uuid()"/>
+    <column name="USER_ID" type="UUID" foreignKey="AUTH_USERS(ID)" onDelete="CASCADE"/>
+    <column name="PASSAGE_REF" type="VARCHAR" size="100"/>
+    <column name="COLOR" type="VARCHAR" size="20"/> <!-- yellow, green, blue, pink -->
+    <column name="CREATED_AT" type="TIMESTAMP" default="NOW()"/>
+    <index name="idx_highlights_user" columns="USER_ID"/>
+  </table>
+
+  <!-- Reading Plan Definitions -->
+  <table name="READING_PLANS">
+    <column name="ID" type="UUID" primary="true"/>
+    <column name="NAME" type="VARCHAR" size="255" required="true"/>
+    <column name="DESCRIPTION" type="TEXT"/>
+    <column name="DURATION_DAYS" type="INTEGER"/>
+    <column name="IS_PUBLIC" type="BOOLEAN" default="true"/>
+  </table>
+
+  <!-- Reading Plan Entries (Daily Readings) -->
+  <table name="READING_PLAN_ENTRIES">
+    <column name="ID" type="UUID" primary="true"/>
+    <column name="PLAN_ID" type="UUID" foreignKey="READING_PLANS(ID)" onDelete="CASCADE"/>
+    <column name="DAY_NUM" type="INTEGER"/>
+    <column name="PASSAGE_REF" type="VARCHAR" size="100"/>
+    <column name="TITLE" type="VARCHAR" size="255"/>
+  </table>
+
+  <!-- User Reading Progress -->
+  <table name="USER_READING_PROGRESS">
+    <column name="ID" type="UUID" primary="true" default="gen_random_uuid()"/>
+    <column name="USER_ID" type="UUID" foreignKey="AUTH_USERS(ID)" onDelete="CASCADE"/>
+    <column name="PLAN_ID" type="UUID" foreignKey="READING_PLANS(ID)"/>
+    <column name="CURRENT_DAY" type="INTEGER" default="1"/>
+    <column name="STARTED_AT" type="TIMESTAMP" default="NOW()"/>
+    <column name="LAST_READ_DATE" type="DATE"/>
+  </table>
+
+  <!-- Tags for Notes/Bookmarks -->
+  <table name="TAGS">
+    <column name="ID" type="UUID" primary="true" default="gen_random_uuid()"/>
+    <column name="USER_ID" type="UUID" foreignKey="AUTH_USERS(ID)" onDelete="CASCADE"/>
+    <column name="NAME" type="VARCHAR" size="100"/>
+    <unique columns="USER_ID,NAME"/>
+  </table>
+
+  <!-- Activity Ledger (Audit Trail) -->
+  <table name="ACTIVITY_LEDGER">
+    <column name="ID" type="UUID" primary="true" default="gen_random_uuid()"/>
+    <column name="USER_ID" type="UUID"/>
+    <column name="EVENT_TYPE" type="VARCHAR" size="50"/>
+    <column name="EVENT_DATE" type="TIMESTAMP" default="NOW()"/>
+    <column name="REFERENCE_TYPE" type="VARCHAR" size="50"/>
+    <column name="REFERENCE_ID" type="UUID"/>
+    <column name="NOTES" type="TEXT"/>
+  </table>
+</schemas>
+```
+
+---
+
+## REST API Endpoints
+
+### Authentication Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/passages/{ref}` | Get passage text |
-| GET | `/api/passages/{ref}/translations` | Get passage in multiple translations |
-| GET | `/api/search?q={query}&translation={code}` | Search Bible text |
-| GET | `/api/crossrefs/{ref}` | Get cross-references |
+| POST | `/auth/register` | Register new user |
+| POST | `/auth/login` | Login with email/password |
+| POST | `/auth/logout` | Logout (invalidate token) |
+| GET | `/auth/verify-email` | Email verification |
+| POST | `/auth/forgot-password` | Password reset request |
+| GET | `/health` | Health check |
+
+### Bible Passage Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/translations` | List available translations |
+| GET | `/api/books` | List books in a translation |
+| GET | `/api/passages/{ref}` | Get passage (e.g., `/api/passages/John.3.16`) |
+| GET | `/api/passages/{ref}/parallel` | Get passage in multiple translations |
+| GET | `/api/chapters/{book}/{chapter}` | Get entire chapter |
+| GET | `/api/search?q={query}&t={translation}` | Full-text search |
+
+### User Content Endpoints (Authenticated)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | GET | `/api/notes` | List user's notes |
 | POST | `/api/notes` | Create note |
+| GET | `/api/notes/{id}` | Get note by ID |
 | PUT | `/api/notes/{id}` | Update note |
 | DELETE | `/api/notes/{id}` | Delete note |
 | GET | `/api/bookmarks` | List bookmarks |
@@ -205,42 +342,107 @@ app/com/mybible/
 | GET | `/api/highlights` | List highlights |
 | POST | `/api/highlights` | Create highlight |
 | DELETE | `/api/highlights/{id}` | Delete highlight |
-| GET | `/api/plans` | List reading plans |
+
+### Reading Plan Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/plans` | List available reading plans |
+| GET | `/api/plans/{id}` | Get plan details |
+| POST | `/api/plans/{id}/start` | Start a reading plan |
 | GET | `/api/plans/{id}/progress` | Get user's progress |
-| POST | `/api/plans/{id}/progress` | Update progress |
+| POST | `/api/plans/{id}/complete-day` | Mark day as complete |
 
-### Request/Response Format
+---
 
-**Success Response:**
-```json
-{
-  "success": true,
-  "data": { /* response payload */ },
-  "timestamp": "2025-12-10T10:00:00Z"
+## JAC Script Patterns
+
+### Router Endpoint Pattern (from AllowanceAlley)
+
+```java
+// GET /api/passages/{ref}
+lContextHandler.addServlet(new ServletHolder(
+  new jakarta.servlet.http.HttpServlet() {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+
+      // Extract passage reference from path
+      String pathInfo = request.getPathInfo();
+      String passageRef = pathInfo.substring(1); // Remove leading /
+
+      // Parse reference (e.g., "John.3.16" -> book=John, chapter=3, verse=16)
+      com.mybible.util.PassageParser parser = new com.mybible.util.PassageParser();
+      parser.parse(passageRef);
+
+      // Load from Bible JSON or database
+      String translation = request.getParameter("t");
+      if (translation == null) translation = "kjv";
+
+      // Get verse(s)
+      com.esarks.arm.model.jeo.ServiceJeo jeo = new com.esarks.arm.model.jeo.ServiceJeo();
+      jeo.getRequest().setWhereClause(
+        "BOOK_NAME = '" + parser.getBookName().replace("'", "''") + "' " +
+        "AND CHAPTER = " + parser.getChapter() + " " +
+        "AND VERSE = " + parser.getVerse()
+      );
+      versesCrud.readVERSES(jeo);
+
+      // Return JSON response
+      response.setContentType("application/json");
+      response.setCharacterEncoding("UTF-8");
+
+      com.mybible.util.JsonUtil.writeResponse(response.getWriter(), jeo);
+    }
+  }
+), "/api/passages/*");
+```
+
+### CRUD Service Pattern
+
+```java
+// Read operation
+com.esarks.arm.model.jeo.ServiceJeo jeo = new com.esarks.arm.model.jeo.ServiceJeo();
+jeo.getRequest().setWhereClause("USER_ID = '" + userId + "'");
+notesCrud.readNOTES(jeo);
+
+// Check for errors
+if (jeo.getReply().getSeverity() > 0) {
+  // Handle error
+  response.setStatus(500);
+  return;
 }
+
+// Get results
+ArrayList results = jeo.getReply().getJeoByInstanceName("com.mybible.data.NOTES");
+
+// Insert operation
+com.mybible.data.NOTES newNote = new com.mybible.data.NOTES("note");
+newNote.setUSER_ID(userId);
+newNote.setPASSAGE_REF(passageRef);
+newNote.setCONTENT(content);
+notesCrud.batchCreateNOTES(jeo, new NOTES[]{newNote});
 ```
 
-**Error Response:**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "ERR_NOT_FOUND",
-    "message": "Passage not found",
-    "details": "Book 'Hezekiah' does not exist"
-  },
-  "timestamp": "2025-12-10T10:00:00Z"
+### JWT Authentication Pattern
+
+```java
+// Extract JWT from request
+com.mybible.util.RequestContext ctx = com.mybible.util.RequestContext.fromRequest(request);
+
+if (!ctx.isAuthenticated()) {
+  response.setStatus(401);
+  response.getWriter().write("{\"error\":\"Unauthorized\"}");
+  return;
 }
+
+String userId = ctx.getUserId();
+// All queries now include: WHERE USER_ID = 'userId'
 ```
 
-### Authentication Header
-```
-Authorization: Bearer <JWT_TOKEN>
-```
+---
 
-## Configuration Management
+## Configuration (Properties.xml)
 
-### Properties.xml Structure
 ```xml
 <?xml version="1.0"?>
 <properties>
@@ -253,227 +455,187 @@ Authorization: Bearer <JWT_TOKEN>
       <pool>
         <minConnections>5</minConnections>
         <maxConnections>20</maxConnections>
+        <idleTimeoutMs>300000</idleTimeoutMs>
       </pool>
     </connection>
   </database>
 
   <server>
-    <port>8080</port>
-    <host>0.0.0.0</host>
-    <contextPath>/api</contextPath>
+    <http>
+      <port>8080</port>
+      <host>0.0.0.0</host>
+    </http>
+    <cors>
+      <allowedOrigins>*</allowedOrigins>
+      <allowedMethods>GET,POST,PUT,DELETE,OPTIONS</allowedMethods>
+      <allowedHeaders>Content-Type,Authorization</allowedHeaders>
+    </cors>
   </server>
 
-  <jwt>
-    <secret>your-256-bit-secret-key-here</secret>
-    <expirationMs>86400000</expirationMs> <!-- 24 hours -->
-  </jwt>
+  <auth>
+    <jwt>
+      <algorithm>HS256</algorithm>
+      <expirationMs>86400000</expirationMs> <!-- 24 hours -->
+    </jwt>
+    <password>
+      <algorithm>SHA-256</algorithm>
+    </password>
+  </auth>
 
-  <translations>
-    <default>KJV</default>
-    <available>KJV,NIV,ESV,NASB,NLT</available>
-  </translations>
+  <bible>
+    <defaultTranslation>kjv</defaultTranslation>
+    <dataDir>bibles</dataDir>
+    <cacheEnabled>true</cacheEnabled>
+  </bible>
+
+  <logging>
+    <level>INFO</level>
+    <sqlStatements>true</sqlStatements>
+    <slowQueryThresholdMs>1000</slowQueryThresholdMs>
+  </logging>
 </properties>
 ```
 
-### Google Cloud Configuration
-```xml
-<gcloud>
-  <project>mybible-project-id</project>
-  <region>us-central1</region>
-  <cloudsql>
-    <instance>mybible-project-id:us-central1:mybible-db</instance>
-  </cloudsql>
-  <storage>
-    <bucket>mybible-data</bucket>
-  </storage>
-</gcloud>
+---
+
+## Build System (6-Phase Pipeline)
+
+Following AllowanceAlley's build pattern:
+
+### Phase 0: Clean Build
+- Remove old class files and generated artifacts
+
+### Phase 1: Generate Data Layer
+- JAC processes MyBibleDdl.xml
+- Generates JEO classes and CRUD methods
+- Produces .new files and compiled classes
+
+### Phase 2: Generate Application Layer
+- Generate form/frame templates (if any)
+
+### Phase 3: Compile Generator Scripts
+- Compile all .script files to Java
+
+### Phase 3.5: Execute Generators
+- Run compiled generators
+- Produce final Java source files
+
+### Phase 3.55: Compile Utility Classes
+```batch
+javac HashUtil.java
+javac JsonUtil.java
+javac JWTUtil.java
+javac BibleLoader.java
+javac PassageParser.java
+javac RequestContext.java
+javac RequestLogger.java
 ```
 
-## Development Workflow
+### Phase 3.6: Recompile Server Scripts
+- Recompile MyBibleRouter after all classes exist
 
-### Phase 1: Foundation
-1. **Database Setup**
-   - Create Cloud SQL instance or local PostgreSQL
-   - Design and implement schema
-   - Load Bible translation data
+### Phase 4: Verify Build
+- Check all artifacts were created
 
-2. **Server Bootstrap**
-   - Create `MyBibleServer.script` with Jetty
-   - Configure routing and CORS
-   - Add request logging
+### Build Command
+```batch
+cd C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\app\com\mybible
+bin\allPhases.bat
+```
 
-3. **Core Passage API**
-   - Implement passage retrieval
-   - Add translation support
-   - Build search functionality
+---
 
-### Phase 2: User Features
-1. **Notes System**
-   - Notes CRUD operations
-   - Tag management
-   - Search within notes
+## Quick Start
 
-2. **Bookmarks & Highlights**
-   - Bookmark management
-   - Highlight colors and categories
+### 1. Set Environment
+```batch
+cd C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\app\com\mybible
+bin\SetMyBible.bat
+```
 
-3. **Reading Plans**
-   - Plan definitions
-   - Progress tracking
-   - Daily reminders
-
-### Phase 3: Production Deployment
-1. **Containerization**
-   - Create Dockerfile
-   - Test locally with docker-compose
-
-2. **Cloud Deployment**
-   - Configure Cloud Build
-   - Deploy to Cloud Run
-   - Set up Cloud SQL connection
-
-3. **Web Client**
-   - Build responsive web interface
-   - Implement PWA features
-   - Test offline capability
-
-## Bible Data Sources
-
-### Public Domain Translations
-- **KJV** (King James Version) - Public domain
-- **ASV** (American Standard Version) - Public domain
-- **WEB** (World English Bible) - Public domain
-
-### Licensed Translations
-Note: Ensure proper licensing for non-public domain translations:
-- NIV, ESV, NASB, NLT require licensing agreements
-- Consider API services (e.g., API.Bible, Bible Gateway API)
-
-### Data Format Options
-1. **Database Storage**: Store verses directly in PostgreSQL
-2. **File-Based**: Load from JSON/XML files in Cloud Storage
-3. **External API**: Query third-party Bible APIs
-
-## Quick Start Commands
-
-### 1. Setup Local Database
-```powershell
-# Create PostgreSQL database
-psql -U postgres
+### 2. Create Database
+```sql
 CREATE DATABASE mybible_db;
 CREATE USER mybible_user WITH PASSWORD 'secure_password';
 GRANT ALL PRIVILEGES ON DATABASE mybible_db TO mybible_user;
-\q
 ```
 
-### 2. Initialize Schema
-```powershell
-cd C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\app\com\mybible
-..\..\..\jacBuild24\bin\jac.bat db\DatabaseInit.script
+### 3. Build Project
+```batch
+bin\allPhases.bat
 ```
 
-### 3. Start Server
-```powershell
-..\..\..\jacBuild24\bin\jac.bat server\MyBibleServer.script
+### 4. Start Server
+```batch
+..\..\..\jacBuild24\bin\JrunDirect.bat server\StartServer.jrun
 ```
 
-### 4. Test API
+### 5. Test API
 ```powershell
+# Health check
+Invoke-RestMethod -Uri "http://localhost:8080/health"
+
 # Get passage
 Invoke-RestMethod -Uri "http://localhost:8080/api/passages/John.3.16"
 
 # Search
-Invoke-RestMethod -Uri "http://localhost:8080/api/search?q=love&translation=KJV"
+Invoke-RestMethod -Uri "http://localhost:8080/api/search?q=love&t=kjv"
 ```
 
-## Google Cloud Deployment
+---
 
-### Cloud Run Deployment
-```bash
-# Build and push container
-gcloud builds submit --config=deploy/cloudbuild.yaml
+## Development Status
 
-# Deploy to Cloud Run
-gcloud run deploy mybible-api \
-  --image gcr.io/PROJECT_ID/mybible-api \
-  --platform managed \
-  --region us-central1 \
-  --allow-unauthenticated \
-  --add-cloudsql-instances PROJECT_ID:us-central1:mybible-db
-```
+### Phase 1: Foundation (Current)
+- [x] CLAUDE.md created with AllowanceAlley patterns
+- [x] Bible JSON files copied to bibles/ folder
+- [ ] Create MyBibleDdl.xml schema definitions
+- [ ] Generate JEO and CRUD classes
+- [ ] Create Properties.xml configuration
+- [ ] Implement utility classes (HashUtil, JWTUtil, etc.)
 
-### Cloud SQL Setup
-```bash
-# Create instance
-gcloud sql instances create mybible-db \
-  --database-version=POSTGRES_15 \
-  --tier=db-f1-micro \
-  --region=us-central1
+### Phase 2: Core API
+- [ ] Create MyBibleRouter.script
+- [ ] Implement Bible passage endpoints
+- [ ] Implement search functionality
+- [ ] Add translation support
 
-# Create database
-gcloud sql databases create mybible_db --instance=mybible-db
+### Phase 3: User Features
+- [ ] Implement authentication endpoints
+- [ ] Notes CRUD
+- [ ] Bookmarks CRUD
+- [ ] Highlights CRUD
+- [ ] Reading plans
 
-# Create user
-gcloud sql users create mybible_user \
-  --instance=mybible-db \
-  --password=secure_password
-```
+### Phase 4: Deployment
+- [ ] Create Dockerfile
+- [ ] Configure docker-compose.yml
+- [ ] Deploy to Google Cloud Run
+- [ ] Set up Cloud SQL
+
+---
 
 ## Resources
 
 ### JAC Documentation
-- Main JAC CLAUDE.md: `C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\CLAUDE.md`
-- Example scripts: `app/com/esarks/examples/`
-- Database demo: `app/com/esarks/examples/databaseintegration/`
-- REST API demo: `app/com/esarks/examples/restapi/`
-- AllowanceAlley reference: `app/com/allowancealley/`
+- **Wiki Home**: `ArchitectsCompanion.wiki/Home.md`
+- **How to Write Scripts**: `ArchitectsCompanion.wiki/HowToWriteScript.md`
+- **AllowanceAlley Patterns**: `ArchitectsCompanion.wiki/AllowanceAlley.md`
+- **Generator Reference**: `ArchitectsCompanion.wiki/AllPhases.md`
+- **Database Setup**: `ArchitectsCompanion.wiki/Database-Setup.md`
+
+### AllowanceAlley Reference
+- **Main Docs**: `app/com/allowancealley/CLAUDE.md`
+- **Patterns**: `app/com/allowancealley/jac-patterns.md`
+- **Router**: `app/com/allowancealley/server/AllowanceAlleyRouter.script`
+- **Data Layer**: `app/com/allowancealley/data/`
 
 ### Bible Data Resources
-- **SWORD Project**: https://crosswire.org/sword/
-- **Open Scriptures**: https://github.com/openscriptures
+- **Local Data**: `bibles/` folder (10 translations included)
 - **API.Bible**: https://scripture.api.bible/
-- **Bible Gateway API**: https://www.biblegateway.com/
-- **Digital Bible Library**: https://thedigitalbiblelibrary.org/
+- **Open Scriptures**: https://github.com/openscriptures
 
-### Google Cloud Documentation
-- Cloud Run: https://cloud.google.com/run/docs
-- Cloud SQL: https://cloud.google.com/sql/docs
-- Cloud Storage: https://cloud.google.com/storage/docs
-- Firebase Auth: https://firebase.google.com/docs/auth
-
-## Development Status
-
-### Current Phase: Project Setup
-- [x] CLAUDE.md created
-- [ ] Database schema designed
-- [ ] Bible data source selected
-- [ ] Server bootstrap implemented
-- [ ] Core passage API implemented
-- [ ] Notes system implemented
-- [ ] Google Cloud deployment configured
-
-### Next Steps
-1. Design detailed database schema
-2. Select and acquire Bible translation data
-3. Create `DatabaseInit.script` with schema
-4. Implement `MyBibleServer.script` with Jetty
-5. Build passage retrieval endpoints
-6. Test end-to-end passage lookup
-
-## Notes for Claude Code
-
-When working on this project:
-
-1. **Reference AllowanceAlley patterns** for proven JAC implementations
-2. **Use JAC examples** as templates (especially database and REST API demos)
-3. **Follow JAC syntax** - mix Java code with `%>...<%` output blocks and `<!%var!>` interpolation
-4. **Database-first approach** - create schema first, then build repositories, services, and endpoints
-5. **Consider licensing** - be careful with Bible translation copyright requirements
-6. **Google Cloud integration** - plan for Cloud Run deployment from the start
-7. **Test incrementally** - create test scripts for each component
-8. **Keep it modular** - one script per endpoint/service/repository
-9. **Use prepared statements** - prevent SQL injection in all database queries
-10. **Log extensively** - use Log4j for debugging and monitoring
+---
 
 ## License
 
@@ -481,6 +643,7 @@ This project is part of the Architects Companion suite, licensed to Architects o
 
 ---
 
-**Document Version:** 1.0
+**Document Version:** 2.0
 **Last Updated:** 2025-12-10
-**Status:** Project Setup - Ready for Development
+**Status:** Phase 1 - Foundation Setup
+**Reference Implementation:** AllowanceAlley
