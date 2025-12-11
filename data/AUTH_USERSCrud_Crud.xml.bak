@@ -1,0 +1,255 @@
+  <com.esarks.arm.schemas.services.root name="com.mybible.data.AUTH_USERSCrud">
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="batchCreateAUTH_USERS" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement type="PreparedStatement" method="executeUpdate">
+          INSERT INTO $AUTH_USERS (ID,EMAIL,PASSWORD_HASH,NAME,EMAIL_VERIFIED,CREATED_AT,UPDATED_AT,LAST_LOGIN) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.AUTH_USERS" iterate="true">
+              <value attribute="ID" />
+              <value attribute="EMAIL" />
+              <value attribute="PASSWORD_HASH" />
+              <value attribute="NAME" />
+              <value attribute="EMAIL_VERIFIED" />
+              <value attribute="CREATED_AT" />
+              <value attribute="UPDATED_AT" />
+              <value attribute="LAST_LOGIN" />
+            </jeo>
+          </jeo>
+        </value>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="batchCreateAUTH_USERSWithIdentity" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement stereotype="sqlServer" type="PreparedStatement" method="executeUpdate">
+          SET IDENTITY_INSERT $AUTH_USERS ON
+          INSERT INTO $AUTH_USERS (ID,EMAIL,PASSWORD_HASH,NAME,EMAIL_VERIFIED,CREATED_AT,UPDATED_AT,LAST_LOGIN) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <statement stereotype="postgreSql" type="PreparedStatement" method="executeUpdate">
+          INSERT INTO $AUTH_USERS (ID,EMAIL,PASSWORD_HASH,NAME,EMAIL_VERIFIED,CREATED_AT,UPDATED_AT,LAST_LOGIN) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <statement stereotype="mySql" type="PreparedStatement" method="executeUpdate">
+          INSERT INTO $AUTH_USERS (ID,EMAIL,PASSWORD_HASH,NAME,EMAIL_VERIFIED,CREATED_AT,UPDATED_AT,LAST_LOGIN) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.AUTH_USERS" iterate="true">
+              <value attribute="ID" />
+              <value attribute="EMAIL" />
+              <value attribute="PASSWORD_HASH" />
+              <value attribute="NAME" />
+              <value attribute="EMAIL_VERIFIED" />
+              <value attribute="CREATED_AT" />
+              <value attribute="UPDATED_AT" />
+              <value attribute="LAST_LOGIN" />
+            </jeo>
+          </jeo>
+        </value>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="createAUTH_USERS" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql stereotype="sqlServer">
+        <statement type="CallableStatement" method="executeQuery">
+          BEGIN
+          INSERT INTO $AUTH_USERS (ID,EMAIL,PASSWORD_HASH,NAME,EMAIL_VERIFIED,CREATED_AT,UPDATED_AT,LAST_LOGIN) VALUES (?,?,?,?,?,?,?,?)
+          SELECT * FROM $AUTH_USERS WHERE ID=?          END
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.AUTH_USERS">
+              <value attribute="ID" />
+              <value attribute="EMAIL" />
+              <value attribute="PASSWORD_HASH" />
+              <value attribute="NAME" />
+              <value attribute="EMAIL_VERIFIED" />
+              <value attribute="CREATED_AT" />
+              <value attribute="UPDATED_AT" />
+              <value attribute="LAST_LOGIN" />
+              <value attribute="ID" />
+            </jeo>
+          </jeo>
+        </value>
+        <result>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+            <jeo name="com.mybible.data.AUTH_USERS" />
+          </jeo>
+        </result>
+      </sql>
+      <sql stereotype="postgreSql">
+        <statement type="PreparedStatement" method="executeUpdate">
+          INSERT INTO $AUTH_USERS (ID,EMAIL,PASSWORD_HASH,NAME,EMAIL_VERIFIED,CREATED_AT,UPDATED_AT,LAST_LOGIN) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.AUTH_USERS">
+              <value attribute="ID" />
+              <value attribute="EMAIL" />
+              <value attribute="PASSWORD_HASH" />
+              <value attribute="NAME" />
+              <value attribute="EMAIL_VERIFIED" />
+              <value attribute="CREATED_AT" />
+              <value attribute="UPDATED_AT" />
+              <value attribute="LAST_LOGIN" />
+            </jeo>
+          </jeo>
+        </value>
+      </sql>
+      <sql stereotype="postgreSql">
+        <statement type="PreparedStatement" method="executeQuery">
+          SELECT * FROM $AUTH_USERS WHERE ID=?        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.AUTH_USERS">
+              <value attribute="ID" />
+            </jeo>
+          </jeo>
+        </value>
+        <result>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+            <jeo name="com.mybible.data.AUTH_USERS" />
+          </jeo>
+        </result>
+      </sql>
+      <sql stereotype="mySql">
+        <statement type="PreparedStatement" method="executeUpdate">
+          INSERT INTO $AUTH_USERS (ID,EMAIL,PASSWORD_HASH,NAME,EMAIL_VERIFIED,CREATED_AT,UPDATED_AT,LAST_LOGIN) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.AUTH_USERS">
+              <value attribute="ID" />
+              <value attribute="EMAIL" />
+              <value attribute="PASSWORD_HASH" />
+              <value attribute="NAME" />
+              <value attribute="EMAIL_VERIFIED" />
+              <value attribute="CREATED_AT" />
+              <value attribute="UPDATED_AT" />
+              <value attribute="LAST_LOGIN" />
+            </jeo>
+          </jeo>
+        </value>
+      </sql>
+      <sql stereotype="mySql">
+        <statement type="PreparedStatement" method="executeQuery">
+          SELECT * FROM $AUTH_USERS WHERE ID=?        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.AUTH_USERS">
+              <value attribute="ID" />
+            </jeo>
+          </jeo>
+        </value>
+        <result>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+            <jeo name="com.mybible.data.AUTH_USERS" />
+          </jeo>
+        </result>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="uidReadAUTH_USERS" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement type="PreparedStatement" method="executeQuery">
+          SELECT * FROM $AUTH_USERS $*where
+        </statement>
+        <where>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.AUTH_USERS" >
+              <where clause="ID=?" attribute="ID" />
+            </jeo>
+          </jeo>
+        </where>
+        <result>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+            <jeo name="com.mybible.data.AUTH_USERS" />
+          </jeo>
+        </result>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="readAUTH_USERS" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement type="PreparedStatement" method="executeQuery">
+          SELECT $*top * FROM $AUTH_USERS $*where $*order $*limit
+        </statement>
+        <result>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+            <jeo name="com.mybible.data.AUTH_USERS" />
+          </jeo>
+        </result>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="deleteAUTH_USERS" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement type="PreparedStatement" method="executeUpdate">
+          DELETE FROM $AUTH_USERS
+        </statement>
+        <where>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.AUTH_USERS" >
+              <where clause="ID=?" attribute="ID" />
+            </jeo>
+          </jeo>
+        </where>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="uidUpdateAUTH_USERS" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement type="PreparedStatement" method="executeUpdate">
+          UPDATE $AUTH_USERS SET EMAIL=?, PASSWORD_HASH=?, NAME=?, EMAIL_VERIFIED=?, CREATED_AT=?, UPDATED_AT=?, LAST_LOGIN=? WHERE ID=?
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.AUTH_USERS">
+              <value attribute="EMAIL" />
+              <value attribute="PASSWORD_HASH" />
+              <value attribute="NAME" />
+              <value attribute="EMAIL_VERIFIED" />
+              <value attribute="CREATED_AT" />
+              <value attribute="UPDATED_AT" />
+              <value attribute="LAST_LOGIN" />
+              <value attribute="ID" />
+            </jeo>
+          </jeo>
+        </value>
+        <count>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+          </jeo>
+        </count>
+      </sql>
+    </service>
+  </com.esarks.arm.schemas.services.root>

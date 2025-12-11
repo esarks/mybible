@@ -9,7 +9,8 @@
       "Bash(dir:*)",
       "Bash(python -m json.tool:*)",
       "Bash(python:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(del \"C:\\Users\\ptm\\OneDrive\\Documents\\GitHub\\ArchitectsCompanion\\jac2024\\app\\com\\mybible\\data\\ACTIVITY_LEDGER.new\" \"C:\\Users\\ptm\\OneDrive\\Documents\\GitHub\\ArchitectsCompanion\\jac2024\\app\\com\\mybible\\data\\ACTIVITY_LEDGERCrud.new\" \"C:\\Users\\ptm\\OneDrive\\Documents\\GitHub\\ArchitectsCompanion\\jac2024\\app\\com\\mybible\\data\\ACTIVITY_LEDGERCrud_Crud.new\")"
     ]
   }
 }

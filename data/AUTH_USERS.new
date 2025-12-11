@@ -1,0 +1,1778 @@
+//$Section=License$Preserve=no
+//  Generated at 2025.12.11 04:32:06.065 AM EST by Architect's Companion (c) 2003, Architects of Software Design, Corp., ALL RIGHTS RESERVED
+//  XML Definition: com.mybible.data.MyBibleDdl
+//     Module Name: com.mybible.data.AUTH_USERS
+
+//$Section=ChangeLog$Preserve=yes
+
+/* ========================================================================= *
+   Contributor        Description
+   ------------------ ------------------------------------------------------
+                      Author
+
+ * ========================================================================= */
+
+//$Section=Class$Preserve=no
+
+package com.mybible.data;
+
+/**
+ *
+ */
+
+//----------------------------------------------------------------------------
+// This section is for generated import delcarations.
+//----------------------------------------------------------------------------
+// Additional Import Declarations
+import com.esarks.jac.*;
+import com.esarks.mic.*;
+import java.util.*;
+import java.lang.reflect.*;
+import java.io.*;
+import java.text.*;
+import java.net.*;
+import java.sql.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+//$Section=CustomDeclare$Preserve=yes
+
+//----------------------------------------------------------------------------
+// This section is for custom declarations.
+//----------------------------------------------------------------------------
+
+//$Section=CustomDeclare$Preserve=no
+
+public class AUTH_USERS extends com.esarks.jac.Jeo {
+
+//----------------------------------------------------------------------------
+// This section is for generated declarations.
+//----------------------------------------------------------------------------
+// Attributes
+
+//ID  Type: string  Size: 36  Nullable: false
+    private PropertyValue iID = new PropertyValue();
+    private boolean iIDIsNullable = false;
+    private boolean iIDUpdate = false;
+    private int iIDSize = 36;
+//EMAIL  Type: string  Size: 255  Nullable: false
+    private PropertyValue iEMAIL = new PropertyValue();
+    private boolean iEMAILIsNullable = false;
+    private boolean iEMAILUpdate = false;
+    private int iEMAILSize = 255;
+//PASSWORD_HASH  Type: string  Size: 255  Nullable: false
+    private PropertyValue iPASSWORD_HASH = new PropertyValue();
+    private boolean iPASSWORD_HASHIsNullable = false;
+    private boolean iPASSWORD_HASHUpdate = false;
+    private int iPASSWORD_HASHSize = 255;
+//NAME  Type: string  Size: 255  Nullable: true
+    private PropertyValue iNAME = new PropertyValue();
+    private boolean iNAMEIsNullable = true;
+    private boolean iNAMEUpdate = false;
+    private int iNAMESize = 255;
+//EMAIL_VERIFIED  Type: boolean  Size:   Nullable: false
+    private PropertyValue iEMAIL_VERIFIED = new PropertyValue();
+    private boolean iEMAIL_VERIFIEDIsNullable = false;
+    private boolean iEMAIL_VERIFIEDUpdate = false;
+    private int iEMAIL_VERIFIEDSize = -1;
+//VERIFICATION_CODE  Type: string  Size: 6  Nullable: true
+    private PropertyValue iVERIFICATION_CODE = new PropertyValue();
+    private boolean iVERIFICATION_CODEIsNullable = true;
+    private boolean iVERIFICATION_CODEUpdate = false;
+    private int iVERIFICATION_CODESize = 6;
+//VERIFICATION_CODE_EXPIRES_AT  Type: timestamp  Size:   Nullable: true
+    private PropertyValue iVERIFICATION_CODE_EXPIRES_AT = new PropertyValue();
+    private boolean iVERIFICATION_CODE_EXPIRES_ATIsNullable = true;
+    private boolean iVERIFICATION_CODE_EXPIRES_ATUpdate = false;
+    private int iVERIFICATION_CODE_EXPIRES_ATSize = -1;
+//CREATED_AT  Type: timestamp  Size:   Nullable: false
+    private PropertyValue iCREATED_AT = new PropertyValue();
+    private boolean iCREATED_ATIsNullable = false;
+    private boolean iCREATED_ATUpdate = false;
+    private int iCREATED_ATSize = -1;
+//UPDATED_AT  Type: timestamp  Size:   Nullable: false
+    private PropertyValue iUPDATED_AT = new PropertyValue();
+    private boolean iUPDATED_ATIsNullable = false;
+    private boolean iUPDATED_ATUpdate = false;
+    private int iUPDATED_ATSize = -1;
+//LAST_LOGIN  Type: timestamp  Size:   Nullable: true
+    private PropertyValue iLAST_LOGIN = new PropertyValue();
+    private boolean iLAST_LOGINIsNullable = true;
+    private boolean iLAST_LOGINUpdate = false;
+    private int iLAST_LOGINSize = -1;
+
+//$Section=CustomClassDeclare$Preserve=yes
+
+//----------------------------------------------------------------------------
+// This section is for custom class declarations.
+//----------------------------------------------------------------------------
+
+//$Section=CustomClassDeclare$Preserve=no
+
+//----------------------------------------------------------------------------
+// Generated constructors.
+//----------------------------------------------------------------------------
+
+/**
+ * Default constructor.
+ */
+    public AUTH_USERS() {
+      iInstanceName = "com.mybible.data.AUTH_USERS";
+//$Section=DefaultConstructor$Preserve=yes
+//$Section=DefaultConstructor$Preserve=no
+    }
+
+/**
+ *
+ */
+    public AUTH_USERS( com.esarks.jac.JeoFactory aJeoFactory ) {
+      iInstanceName = "com.mybible.data.AUTH_USERS";
+//$Section=Operation$Jeo( JeoFactory aJeoFactory )$Preserve=yes
+//$Section=Operation$Jeo( JeoFactory aJeoFactory )$Preserve=no
+    }
+
+/**
+ *
+ */
+    public AUTH_USERS( Script aScript ) {
+      super("", aScript);
+      iInstanceName = "com.mybible.data.AUTH_USERS";
+//$Section=Operation$Jeo( String aScript )$Preserve=yes
+//$Section=Operation$Jeo( String aScript )$Preserve=no
+    }
+
+/**
+ *
+ */
+    public AUTH_USERS( String aTypeName ) {
+      iInstanceName = "com.mybible.data.AUTH_USERS";
+      iJeoTypeName = aTypeName;
+//$Section=Operation$Jeo( String aTypeName )$Preserve=yes
+//$Section=Operation$Jeo( String aTypeName )$Preserve=no
+    }
+
+/**
+ *
+ */
+    public AUTH_USERS( String aTypeName, Script aScript ) {
+      super("", aScript);
+      iInstanceName = "com.mybible.data.AUTH_USERS";
+      iJeoTypeName = aTypeName;
+//$Section=Operation$Jeo( String aTypeName, Script aScript )$Preserve=yes
+//$Section=Operation$Jeo( String aTypeName, Script aScript )$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// Default finalize is generated.
+//----------------------------------------------------------------------------
+
+/**
+ * Default finalize.
+ */
+    public void finalize() {
+    	freeResources();
+//$Section=DefaultDestructor$Preserve=yes
+//$Section=DefaultDestructor$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// Default freeResources is generated.
+//----------------------------------------------------------------------------
+
+/**
+ * Default freeResources.
+ */
+    public void freeResources() {
+    	super.freeResources();
+    iID = null;
+    iEMAIL = null;
+    iPASSWORD_HASH = null;
+    iNAME = null;
+    iEMAIL_VERIFIED = null;
+    iVERIFICATION_CODE = null;
+    iVERIFICATION_CODE_EXPIRES_AT = null;
+    iCREATED_AT = null;
+    iUPDATED_AT = null;
+    iLAST_LOGIN = null;
+//$Section=DefaultFreeResources$Preserve=yes
+//$Section=DefaultFreeResources$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// This section is for custom operations.
+//----------------------------------------------------------------------------
+//$Section=CustomOperations$Preserve=yes
+//$Section=CustomOperations$Preserve=no
+
+    public void init() {
+    	super.init();
+//ID
+    iID = new PropertyValue();
+    iIDUpdate = false;
+//EMAIL
+    iEMAIL = new PropertyValue();
+    iEMAILUpdate = false;
+//PASSWORD_HASH
+    iPASSWORD_HASH = new PropertyValue();
+    iPASSWORD_HASHUpdate = false;
+//NAME
+    iNAME = new PropertyValue();
+    iNAMEUpdate = false;
+//EMAIL_VERIFIED
+    iEMAIL_VERIFIED = new PropertyValue();
+    iEMAIL_VERIFIEDUpdate = false;
+//VERIFICATION_CODE
+    iVERIFICATION_CODE = new PropertyValue();
+    iVERIFICATION_CODEUpdate = false;
+//VERIFICATION_CODE_EXPIRES_AT
+    iVERIFICATION_CODE_EXPIRES_AT = new PropertyValue();
+    iVERIFICATION_CODE_EXPIRES_ATUpdate = false;
+//CREATED_AT
+    iCREATED_AT = new PropertyValue();
+    iCREATED_ATUpdate = false;
+//UPDATED_AT
+    iUPDATED_AT = new PropertyValue();
+    iUPDATED_ATUpdate = false;
+//LAST_LOGIN
+    iLAST_LOGIN = new PropertyValue();
+    iLAST_LOGINUpdate = false;
+    }
+
+//----------------------------------------------------------------------------
+// This section is for mapping views to tables.
+//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+// This section is for mapping from result sets.
+//----------------------------------------------------------------------------
+
+  public void mapFromResultSet( ResultSet aResultSet, boolean aTrim, boolean aSpacesToNull) {
+//$Section=Operation$mapFromResultSet$Preserve=no
+    mapFromResultSetTable("*", aResultSet, aTrim, aSpacesToNull);
+//$Section=Operation$mapFromResultSet$Preserve=no
+  }
+
+  public void mapFromResultSetTable( String aTable, ResultSet aResultSet, boolean aTrim, boolean aSpacesToNull) {
+    // DEPRECATED METHOD!!!!
+    // Use of Trim and SpacesToNull is not functional.
+    mapFromResultSetTable(aTable, aResultSet);
+  }
+  
+  public void mapFromResultSetTable( String aTable, ResultSet aResultSet) {
+//$Section=Operation$mapFromResultSetTable$Preserve=no
+//    String lValue = null;
+      if (aTable.equals("*") || aTable.equals("AUTH_USERS")) {
+// ID in AUTH_USERS
+        try {
+          String lValue = aResultSet.getString("ID");
+          if (aResultSet.wasNull()) {
+            setIDNull();
+          } else {
+            setID(lValue);
+          }
+        } catch (Throwable e) {}
+// EMAIL in AUTH_USERS
+        try {
+          String lValue = aResultSet.getString("EMAIL");
+          if (aResultSet.wasNull()) {
+            setEMAILNull();
+          } else {
+            setEMAIL(lValue);
+          }
+        } catch (Throwable e) {}
+// PASSWORD_HASH in AUTH_USERS
+        try {
+          String lValue = aResultSet.getString("PASSWORD_HASH");
+          if (aResultSet.wasNull()) {
+            setPASSWORD_HASHNull();
+          } else {
+            setPASSWORD_HASH(lValue);
+          }
+        } catch (Throwable e) {}
+// NAME in AUTH_USERS
+        try {
+          String lValue = aResultSet.getString("NAME");
+          if (aResultSet.wasNull()) {
+            setNAMENull();
+          } else {
+            setNAME(lValue);
+          }
+        } catch (Throwable e) {}
+// EMAIL_VERIFIED in AUTH_USERS
+        try {
+          boolean lValue = aResultSet.getBoolean("EMAIL_VERIFIED");
+          if (aResultSet.wasNull()) {
+            setEMAIL_VERIFIEDNull();
+          } else {
+            setEMAIL_VERIFIED(lValue);
+          }
+        } catch (Throwable e) {}
+// VERIFICATION_CODE in AUTH_USERS
+        try {
+          String lValue = aResultSet.getString("VERIFICATION_CODE");
+          if (aResultSet.wasNull()) {
+            setVERIFICATION_CODENull();
+          } else {
+            setVERIFICATION_CODE(lValue);
+          }
+        } catch (Throwable e) {}
+// VERIFICATION_CODE_EXPIRES_AT in AUTH_USERS
+        try {
+          java.sql.Timestamp lValue = aResultSet.getTimestamp("VERIFICATION_CODE_EXPIRES_AT");
+          if (aResultSet.wasNull()) {
+            setVERIFICATION_CODE_EXPIRES_ATNull();
+          } else {
+            setVERIFICATION_CODE_EXPIRES_AT(lValue);
+          }
+        } catch (Throwable e) {}
+// CREATED_AT in AUTH_USERS
+        try {
+          java.sql.Timestamp lValue = aResultSet.getTimestamp("CREATED_AT");
+          if (aResultSet.wasNull()) {
+            setCREATED_ATNull();
+          } else {
+            setCREATED_AT(lValue);
+          }
+        } catch (Throwable e) {}
+// UPDATED_AT in AUTH_USERS
+        try {
+          java.sql.Timestamp lValue = aResultSet.getTimestamp("UPDATED_AT");
+          if (aResultSet.wasNull()) {
+            setUPDATED_ATNull();
+          } else {
+            setUPDATED_AT(lValue);
+          }
+        } catch (Throwable e) {}
+// LAST_LOGIN in AUTH_USERS
+        try {
+          java.sql.Timestamp lValue = aResultSet.getTimestamp("LAST_LOGIN");
+          if (aResultSet.wasNull()) {
+            setLAST_LOGINNull();
+          } else {
+            setLAST_LOGIN(lValue);
+          }
+        } catch (Throwable e) {}
+      }
+//$Section=Operation$mapFromResultSetTable$Preserve=no
+  }
+//----------------------------------------------------------------------------
+// This section is for mapping from and to Jeo's.
+//----------------------------------------------------------------------------
+
+  public void mapToJeo( Jeo aJeo) {
+//$Section=Operation$mapFromJeo$Preserve=no
+    String lType = null;
+    PropertyValue lValue = null;
+// ID
+      try {
+        lValue = aJeo.getPropertyValueByName("ID");
+        if (lValue != null) {
+          lType = aJeo.getTypeByName("ID");
+          if (!isIDNull()) {
+            lValue.reset(lType, getIDPropertyValue().toString());
+          } else {
+            lValue.reset("null", "");
+          }
+        }
+      } catch(Throwable e) {}
+// EMAIL
+      try {
+        lValue = aJeo.getPropertyValueByName("EMAIL");
+        if (lValue != null) {
+          lType = aJeo.getTypeByName("EMAIL");
+          if (!isEMAILNull()) {
+            lValue.reset(lType, getEMAILPropertyValue().toString());
+          } else {
+            lValue.reset("null", "");
+          }
+        }
+      } catch(Throwable e) {}
+// PASSWORD_HASH
+      try {
+        lValue = aJeo.getPropertyValueByName("PASSWORD_HASH");
+        if (lValue != null) {
+          lType = aJeo.getTypeByName("PASSWORD_HASH");
+          if (!isPASSWORD_HASHNull()) {
+            lValue.reset(lType, getPASSWORD_HASHPropertyValue().toString());
+          } else {
+            lValue.reset("null", "");
+          }
+        }
+      } catch(Throwable e) {}
+// NAME
+      try {
+        lValue = aJeo.getPropertyValueByName("NAME");
+        if (lValue != null) {
+          lType = aJeo.getTypeByName("NAME");
+          if (!isNAMENull()) {
+            lValue.reset(lType, getNAMEPropertyValue().toString());
+          } else {
+            lValue.reset("null", "");
+          }
+        }
+      } catch(Throwable e) {}
+// EMAIL_VERIFIED
+      try {
+        lValue = aJeo.getPropertyValueByName("EMAIL_VERIFIED");
+        if (lValue != null) {
+          lType = aJeo.getTypeByName("EMAIL_VERIFIED");
+          if (!isEMAIL_VERIFIEDNull()) {
+            lValue.reset(lType, getEMAIL_VERIFIEDPropertyValue().toString());
+          } else {
+            lValue.reset("null", "");
+          }
+        }
+      } catch(Throwable e) {}
+// VERIFICATION_CODE
+      try {
+        lValue = aJeo.getPropertyValueByName("VERIFICATION_CODE");
+        if (lValue != null) {
+          lType = aJeo.getTypeByName("VERIFICATION_CODE");
+          if (!isVERIFICATION_CODENull()) {
+            lValue.reset(lType, getVERIFICATION_CODEPropertyValue().toString());
+          } else {
+            lValue.reset("null", "");
+          }
+        }
+      } catch(Throwable e) {}
+// VERIFICATION_CODE_EXPIRES_AT
+      try {
+        lValue = aJeo.getPropertyValueByName("VERIFICATION_CODE_EXPIRES_AT");
+        if (lValue != null) {
+          lType = aJeo.getTypeByName("VERIFICATION_CODE_EXPIRES_AT");
+          if (!isVERIFICATION_CODE_EXPIRES_ATNull()) {
+            lValue.reset(lType, getVERIFICATION_CODE_EXPIRES_ATPropertyValue().toString());
+          } else {
+            lValue.reset("null", "");
+          }
+        }
+      } catch(Throwable e) {}
+// CREATED_AT
+      try {
+        lValue = aJeo.getPropertyValueByName("CREATED_AT");
+        if (lValue != null) {
+          lType = aJeo.getTypeByName("CREATED_AT");
+          if (!isCREATED_ATNull()) {
+            lValue.reset(lType, getCREATED_ATPropertyValue().toString());
+          } else {
+            lValue.reset("null", "");
+          }
+        }
+      } catch(Throwable e) {}
+// UPDATED_AT
+      try {
+        lValue = aJeo.getPropertyValueByName("UPDATED_AT");
+        if (lValue != null) {
+          lType = aJeo.getTypeByName("UPDATED_AT");
+          if (!isUPDATED_ATNull()) {
+            lValue.reset(lType, getUPDATED_ATPropertyValue().toString());
+          } else {
+            lValue.reset("null", "");
+          }
+        }
+      } catch(Throwable e) {}
+// LAST_LOGIN
+      try {
+        lValue = aJeo.getPropertyValueByName("LAST_LOGIN");
+        if (lValue != null) {
+          lType = aJeo.getTypeByName("LAST_LOGIN");
+          if (!isLAST_LOGINNull()) {
+            lValue.reset(lType, getLAST_LOGINPropertyValue().toString());
+          } else {
+            lValue.reset("null", "");
+          }
+        }
+      } catch(Throwable e) {}
+//$Section=Operation$mapToJeo$Preserve=no
+  }
+
+  public void mapFromJeo( Jeo aJeo) {
+//$Section=Operation$mapFromJeo$Preserve=no
+    String lType = null;
+    PropertyValue lValue = null;
+// ID
+      try {
+        lValue = aJeo.getPropertyValueByName("ID");
+        if (lValue != null) {
+          setID(lValue);
+        }
+      } catch(Throwable e) {}
+// EMAIL
+      try {
+        lValue = aJeo.getPropertyValueByName("EMAIL");
+        if (lValue != null) {
+          setEMAIL(lValue);
+        }
+      } catch(Throwable e) {}
+// PASSWORD_HASH
+      try {
+        lValue = aJeo.getPropertyValueByName("PASSWORD_HASH");
+        if (lValue != null) {
+          setPASSWORD_HASH(lValue);
+        }
+      } catch(Throwable e) {}
+// NAME
+      try {
+        lValue = aJeo.getPropertyValueByName("NAME");
+        if (lValue != null) {
+          setNAME(lValue);
+        }
+      } catch(Throwable e) {}
+// EMAIL_VERIFIED
+      try {
+        lValue = aJeo.getPropertyValueByName("EMAIL_VERIFIED");
+        if (lValue != null) {
+          setEMAIL_VERIFIED(lValue);
+        }
+      } catch(Throwable e) {}
+// VERIFICATION_CODE
+      try {
+        lValue = aJeo.getPropertyValueByName("VERIFICATION_CODE");
+        if (lValue != null) {
+          setVERIFICATION_CODE(lValue);
+        }
+      } catch(Throwable e) {}
+// VERIFICATION_CODE_EXPIRES_AT
+      try {
+        lValue = aJeo.getPropertyValueByName("VERIFICATION_CODE_EXPIRES_AT");
+        if (lValue != null) {
+          setVERIFICATION_CODE_EXPIRES_AT(lValue);
+        }
+      } catch(Throwable e) {}
+// CREATED_AT
+      try {
+        lValue = aJeo.getPropertyValueByName("CREATED_AT");
+        if (lValue != null) {
+          setCREATED_AT(lValue);
+        }
+      } catch(Throwable e) {}
+// UPDATED_AT
+      try {
+        lValue = aJeo.getPropertyValueByName("UPDATED_AT");
+        if (lValue != null) {
+          setUPDATED_AT(lValue);
+        }
+      } catch(Throwable e) {}
+// LAST_LOGIN
+      try {
+        lValue = aJeo.getPropertyValueByName("LAST_LOGIN");
+        if (lValue != null) {
+          setLAST_LOGIN(lValue);
+        }
+      } catch(Throwable e) {}
+//$Section=Operation$mapFromJeo$Preserve=no
+  }
+
+//----------------------------------------------------------------------------
+// This section is for the get by string name related methods.
+//----------------------------------------------------------------------------
+
+  public String getCasedName ( String aAttributeName) {
+//$Section=Operation$getCasedName$Preserve=no
+
+    try {
+        Method lMethod = this.getClass().getMethod("getAttributeName_" + aAttributeName.toLowerCase(), null);
+        return (String) lMethod.invoke(this, null);
+    } catch (Throwable e) {
+        //System.out.println(e);
+        return null;
+    }
+
+//$Section=Operation$getCasedName$Preserve=no
+  }
+
+  public PropertyValue getPropertyValueByName ( String aAttributeName) {
+//$Section=Operation$getPropertyValueByName$Preserve=no
+
+    try {
+        Method lMethod = this.getClass().getMethod("get" + getCasedName(aAttributeName) + "PropertyValue", null);
+        return (PropertyValue) lMethod.invoke(this, null);
+    } catch (Throwable e) {
+        //System.out.println(e);
+        return null;
+    }
+
+//$Section=Operation$getPropertyValueByName$Preserve=no
+  }
+
+  public void setStringValueByName ( String aAttributeName, String aValue) {
+//$Section=Operation$setStringValueByName$Preserve=no
+
+    try {
+        Class lClassParams[] = new Class[]{"".getClass()};
+        Object lArguments[] = new Object[] {aValue};
+        Method lMethod = this.getClass().getMethod("set" + getCasedName(aAttributeName), lClassParams);
+        lMethod.invoke(this, lArguments);
+    } catch (Throwable e) {
+        //System.out.println(e);
+    }
+
+//$Section=Operation$setStringValueByName$Preserve=no
+  }
+
+  public String getTypeByName ( String aAttributeName) {
+//$Section=Operation$getTypeByName$Preserve=no
+
+    try {
+        Method lMethod = this.getClass().getMethod("get" + getCasedName(aAttributeName) + "ValueType", null);
+        return (String) lMethod.invoke(this, null);
+    } catch (Throwable e) {
+        //System.out.println(e);
+        return null;
+    }
+
+//$Section=Operation$getTypeByName$Preserve=no
+  }
+
+  public String getStereotypeByName ( String aAttributeName) {
+//$Section=Operation$getStereotypeByName$Preserve=no
+
+    try {
+        Method lMethod = this.getClass().getMethod("get" + getCasedName(aAttributeName) + "ValueStereotype", null);
+        return (String) lMethod.invoke(this, null);
+    } catch (Throwable e) {
+        //System.out.println(e);
+        return null;
+    }
+
+//$Section=Operation$getStereotypeByName$Preserve=no
+  }
+
+  public String getNameByIndex ( int aIndex) {
+//$Section=Operation$getNameByIndex$Preserve=no
+
+    switch(aIndex) {
+      case 1: return "id";
+      case 2: return "email";
+      case 3: return "password_hash";
+      case 4: return "name";
+      case 5: return "email_verified";
+      case 6: return "verification_code";
+      case 7: return "verification_code_expires_at";
+      case 8: return "created_at";
+      case 9: return "updated_at";
+      case 10: return "last_login";
+    }
+    return null;
+//$Section=Operation$getNameByIndex$Preserve=no
+  }
+
+  public String getXml ( ) {
+//$Section=Operation$getXml$Preserve=no
+
+    StringBuffer lXml = new StringBuffer("<jeo name='com.mybible.data.AUTH_USERS'>");
+    String lCdataBegin = "<" + "!" + "[CDATA[";
+// Field: ID
+    lXml.append("<field name='ID' type='string'>");
+    lXml.append(lCdataBegin).append(getIDPropertyValue().toString()).append("]]>").append("</field>");
+// Field: EMAIL
+    lXml.append("<field name='EMAIL' type='string'>");
+    lXml.append(lCdataBegin).append(getEMAILPropertyValue().toString()).append("]]>").append("</field>");
+// Field: PASSWORD_HASH
+    lXml.append("<field name='PASSWORD_HASH' type='string'>");
+    lXml.append(lCdataBegin).append(getPASSWORD_HASHPropertyValue().toString()).append("]]>").append("</field>");
+// Field: NAME
+    lXml.append("<field name='NAME' type='string'>");
+    lXml.append(lCdataBegin).append(getNAMEPropertyValue().toString()).append("]]>").append("</field>");
+// Field: EMAIL_VERIFIED
+    lXml.append("<field name='EMAIL_VERIFIED' type='boolean'>");
+    lXml.append(getEMAIL_VERIFIEDPropertyValue().toString()).append("</field>");
+// Field: VERIFICATION_CODE
+    lXml.append("<field name='VERIFICATION_CODE' type='string'>");
+    lXml.append(lCdataBegin).append(getVERIFICATION_CODEPropertyValue().toString()).append("]]>").append("</field>");
+// Field: VERIFICATION_CODE_EXPIRES_AT
+    lXml.append("<field name='VERIFICATION_CODE_EXPIRES_AT' type='timestamp'>");
+    lXml.append(getVERIFICATION_CODE_EXPIRES_ATPropertyValue().toString()).append("</field>");
+// Field: CREATED_AT
+    lXml.append("<field name='CREATED_AT' type='timestamp'>");
+    lXml.append(getCREATED_ATPropertyValue().toString()).append("</field>");
+// Field: UPDATED_AT
+    lXml.append("<field name='UPDATED_AT' type='timestamp'>");
+    lXml.append(getUPDATED_ATPropertyValue().toString()).append("</field>");
+// Field: LAST_LOGIN
+    lXml.append("<field name='LAST_LOGIN' type='timestamp'>");
+    lXml.append(getLAST_LOGINPropertyValue().toString()).append("</field>");
+    lXml.append("</jeo>");
+    return lXml.toString();
+
+//$Section=Operation$getXml$Preserve=no
+  }
+
+  public boolean isJeoEqual ( Jeo aJeo) {
+//$Section=Operation$isJeoEqual$Preserve=no
+
+    PropertyValue lThisValue = null;
+    PropertyValue lThatValue = null;
+    lThisValue = this.getPropertyValueByName("id");
+    lThatValue = aJeo.getPropertyValueByName("id");
+    if (lThisValue.getValueType() != lThatValue.getValueType()) return false;
+    if (lThisValue.compareTo(lThatValue) != 0) return false;
+    lThisValue = this.getPropertyValueByName("email");
+    lThatValue = aJeo.getPropertyValueByName("email");
+    if (lThisValue.getValueType() != lThatValue.getValueType()) return false;
+    if (lThisValue.compareTo(lThatValue) != 0) return false;
+    lThisValue = this.getPropertyValueByName("password_hash");
+    lThatValue = aJeo.getPropertyValueByName("password_hash");
+    if (lThisValue.getValueType() != lThatValue.getValueType()) return false;
+    if (lThisValue.compareTo(lThatValue) != 0) return false;
+    lThisValue = this.getPropertyValueByName("name");
+    lThatValue = aJeo.getPropertyValueByName("name");
+    if (lThisValue.getValueType() != lThatValue.getValueType()) return false;
+    if (lThisValue.compareTo(lThatValue) != 0) return false;
+    lThisValue = this.getPropertyValueByName("email_verified");
+    lThatValue = aJeo.getPropertyValueByName("email_verified");
+    if (lThisValue.getValueType() != lThatValue.getValueType()) return false;
+    if (lThisValue.compareTo(lThatValue) != 0) return false;
+    lThisValue = this.getPropertyValueByName("verification_code");
+    lThatValue = aJeo.getPropertyValueByName("verification_code");
+    if (lThisValue.getValueType() != lThatValue.getValueType()) return false;
+    if (lThisValue.compareTo(lThatValue) != 0) return false;
+    lThisValue = this.getPropertyValueByName("verification_code_expires_at");
+    lThatValue = aJeo.getPropertyValueByName("verification_code_expires_at");
+    if (lThisValue.getValueType() != lThatValue.getValueType()) return false;
+    if (lThisValue.compareTo(lThatValue) != 0) return false;
+    lThisValue = this.getPropertyValueByName("created_at");
+    lThatValue = aJeo.getPropertyValueByName("created_at");
+    if (lThisValue.getValueType() != lThatValue.getValueType()) return false;
+    if (lThisValue.compareTo(lThatValue) != 0) return false;
+    lThisValue = this.getPropertyValueByName("updated_at");
+    lThatValue = aJeo.getPropertyValueByName("updated_at");
+    if (lThisValue.getValueType() != lThatValue.getValueType()) return false;
+    if (lThisValue.compareTo(lThatValue) != 0) return false;
+    lThisValue = this.getPropertyValueByName("last_login");
+    lThatValue = aJeo.getPropertyValueByName("last_login");
+    if (lThisValue.getValueType() != lThatValue.getValueType()) return false;
+    if (lThisValue.compareTo(lThatValue) != 0) return false;
+    return true;
+//$Section=Operation$isJeoEqual$Preserve=no
+  }
+
+//----------------------------------------------------------------------------
+// This section is for generated attribute accessor methods.
+//----------------------------------------------------------------------------
+
+//----------------------------------------------------------------------------
+// ID
+//----------------------------------------------------------------------------
+    public String getID() {
+//$Section=Attribute get$ID$Preserve=no
+        return iID.getValueString();
+//$Section=Attribute get$ID$Preserve=no
+    }
+    public String getID(String aValue) {
+//$Section=Attribute get$ID(String)$Preserve=no
+      if (isIDNull()) return aValue;
+      return iID.getValueString();
+//$Section=Attribute get$ID(String)$Preserve=no
+    }
+    public void setID(String aValue) {
+//$Section=Attribute set$ID$Preserve=no
+        iID.reset(aValue);
+//$Section=Attribute set$ID$Preserve=no
+    }
+    public void setID(PropertyValue aValue) {
+//$Section=Attribute setPropertyValue$ID$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setIDNull();
+          return;
+        }
+        setID(aValue.toString());
+//$Section=Attribute setPropertyValue$ID$Preserve=no
+    }
+    public void setID(PropertyValue aValue, String aFormat) {
+//$Section=Attribute setPropertyValueFormat$ID$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setIDNull();
+          return;
+        }
+        setID(aValue.toString(), aFormat);
+//$Section=Attribute setPropertyValueFormat$ID$Preserve=no
+    }
+    public void setID(String aValue, String aType) {
+//$Section=Attribute setAsStringType$ID$Preserve=no
+        iID.reset(aType, aValue);
+//$Section=Attribute setAsStringType$ID$Preserve=no
+    }
+    public PropertyValue getIDPropertyValue() {
+//$Section=Attribute getPropertyValue$ID$Preserve=no
+        return iID;
+//$Section=Attribute getPropertyValue$ID$Preserve=no
+    }
+    public String getAttributeName_id() {
+//$Section=Attribute getAttributeName$id$Preserve=no
+        return "ID";
+//$Section=Attribute getAttributeName_$id$Preserve=no
+    }
+    public int sizeID() {
+//$Section=Attribute size$ID$Preserve=no
+        return iIDSize;
+//$Section=Attribute size$ID$Preserve=no
+    }
+    public boolean isIDNullable() {
+//$Section=Attribute isNullable$ID$Preserve=no
+        return iIDIsNullable;
+//$Section=Attribute isNullable$ID$Preserve=no
+    }
+    public boolean isIDNull() {
+//$Section=Attribute isNull$ID$Preserve=no
+        if (iID.getValueType() == PropertyValue.CONST_VALUE_TYPE_NULL) return true;
+        return false;
+//$Section=Attribute isNull$ID$Preserve=no
+    }
+    public void setIDNull() {
+//$Section=Attribute setNull$ID$Preserve=no
+        iID.reset();
+//$Section=Attribute setNull$ID$Preserve=no
+    }
+    public void setIDSpaceToNull() {
+//$Section=Attribute setSpaceToNull$ID$Preserve=no
+        if (getIDPropertyValue().toString().trim().equals("")) setIDNull();
+//$Section=Attribute setSpaceToNull$ID$Preserve=no
+    }
+    public void setIDUpdate(boolean aUpdate) {
+//$Section=Attribute setUpdate$ID$Preserve=no
+        iIDUpdate = aUpdate;
+//$Section=Attribute setUpdate$ID$Preserve=no
+    }
+    public boolean getIDUpdate() {
+//$Section=Attribute getUpdate$ID$Preserve=no
+        return iIDUpdate;
+//$Section=Attribute getUpdate$ID$Preserve=no
+    }
+    public String getIDValueType() {
+//$Section=Attribute getValueType$ID$Preserve=no
+        return "string";
+//$Section=Attribute getValueType$ID$Preserve=no
+    }
+    public String getIDValueStereotype() {
+//$Section=Attribute getValueStereotype$ID$Preserve=no
+        return "";
+//$Section=Attribute getValueStereotype$ID$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// EMAIL
+//----------------------------------------------------------------------------
+    public String getEMAIL() {
+//$Section=Attribute get$EMAIL$Preserve=no
+        return iEMAIL.getValueString();
+//$Section=Attribute get$EMAIL$Preserve=no
+    }
+    public String getEMAIL(String aValue) {
+//$Section=Attribute get$EMAIL(String)$Preserve=no
+      if (isEMAILNull()) return aValue;
+      return iEMAIL.getValueString();
+//$Section=Attribute get$EMAIL(String)$Preserve=no
+    }
+    public void setEMAIL(String aValue) {
+//$Section=Attribute set$EMAIL$Preserve=no
+        iEMAIL.reset(aValue);
+//$Section=Attribute set$EMAIL$Preserve=no
+    }
+    public void setEMAIL(PropertyValue aValue) {
+//$Section=Attribute setPropertyValue$EMAIL$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setEMAILNull();
+          return;
+        }
+        setEMAIL(aValue.toString());
+//$Section=Attribute setPropertyValue$EMAIL$Preserve=no
+    }
+    public void setEMAIL(PropertyValue aValue, String aFormat) {
+//$Section=Attribute setPropertyValueFormat$EMAIL$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setEMAILNull();
+          return;
+        }
+        setEMAIL(aValue.toString(), aFormat);
+//$Section=Attribute setPropertyValueFormat$EMAIL$Preserve=no
+    }
+    public void setEMAIL(String aValue, String aType) {
+//$Section=Attribute setAsStringType$EMAIL$Preserve=no
+        iEMAIL.reset(aType, aValue);
+//$Section=Attribute setAsStringType$EMAIL$Preserve=no
+    }
+    public PropertyValue getEMAILPropertyValue() {
+//$Section=Attribute getPropertyValue$EMAIL$Preserve=no
+        return iEMAIL;
+//$Section=Attribute getPropertyValue$EMAIL$Preserve=no
+    }
+    public String getAttributeName_email() {
+//$Section=Attribute getAttributeName$email$Preserve=no
+        return "EMAIL";
+//$Section=Attribute getAttributeName_$email$Preserve=no
+    }
+    public int sizeEMAIL() {
+//$Section=Attribute size$EMAIL$Preserve=no
+        return iEMAILSize;
+//$Section=Attribute size$EMAIL$Preserve=no
+    }
+    public boolean isEMAILNullable() {
+//$Section=Attribute isNullable$EMAIL$Preserve=no
+        return iEMAILIsNullable;
+//$Section=Attribute isNullable$EMAIL$Preserve=no
+    }
+    public boolean isEMAILNull() {
+//$Section=Attribute isNull$EMAIL$Preserve=no
+        if (iEMAIL.getValueType() == PropertyValue.CONST_VALUE_TYPE_NULL) return true;
+        return false;
+//$Section=Attribute isNull$EMAIL$Preserve=no
+    }
+    public void setEMAILNull() {
+//$Section=Attribute setNull$EMAIL$Preserve=no
+        iEMAIL.reset();
+//$Section=Attribute setNull$EMAIL$Preserve=no
+    }
+    public void setEMAILSpaceToNull() {
+//$Section=Attribute setSpaceToNull$EMAIL$Preserve=no
+        if (getEMAILPropertyValue().toString().trim().equals("")) setEMAILNull();
+//$Section=Attribute setSpaceToNull$EMAIL$Preserve=no
+    }
+    public void setEMAILUpdate(boolean aUpdate) {
+//$Section=Attribute setUpdate$EMAIL$Preserve=no
+        iEMAILUpdate = aUpdate;
+//$Section=Attribute setUpdate$EMAIL$Preserve=no
+    }
+    public boolean getEMAILUpdate() {
+//$Section=Attribute getUpdate$EMAIL$Preserve=no
+        return iEMAILUpdate;
+//$Section=Attribute getUpdate$EMAIL$Preserve=no
+    }
+    public String getEMAILValueType() {
+//$Section=Attribute getValueType$EMAIL$Preserve=no
+        return "string";
+//$Section=Attribute getValueType$EMAIL$Preserve=no
+    }
+    public String getEMAILValueStereotype() {
+//$Section=Attribute getValueStereotype$EMAIL$Preserve=no
+        return "";
+//$Section=Attribute getValueStereotype$EMAIL$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// PASSWORD_HASH
+//----------------------------------------------------------------------------
+    public String getPASSWORD_HASH() {
+//$Section=Attribute get$PASSWORD_HASH$Preserve=no
+        return iPASSWORD_HASH.getValueString();
+//$Section=Attribute get$PASSWORD_HASH$Preserve=no
+    }
+    public String getPASSWORD_HASH(String aValue) {
+//$Section=Attribute get$PASSWORD_HASH(String)$Preserve=no
+      if (isPASSWORD_HASHNull()) return aValue;
+      return iPASSWORD_HASH.getValueString();
+//$Section=Attribute get$PASSWORD_HASH(String)$Preserve=no
+    }
+    public void setPASSWORD_HASH(String aValue) {
+//$Section=Attribute set$PASSWORD_HASH$Preserve=no
+        iPASSWORD_HASH.reset(aValue);
+//$Section=Attribute set$PASSWORD_HASH$Preserve=no
+    }
+    public void setPASSWORD_HASH(PropertyValue aValue) {
+//$Section=Attribute setPropertyValue$PASSWORD_HASH$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setPASSWORD_HASHNull();
+          return;
+        }
+        setPASSWORD_HASH(aValue.toString());
+//$Section=Attribute setPropertyValue$PASSWORD_HASH$Preserve=no
+    }
+    public void setPASSWORD_HASH(PropertyValue aValue, String aFormat) {
+//$Section=Attribute setPropertyValueFormat$PASSWORD_HASH$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setPASSWORD_HASHNull();
+          return;
+        }
+        setPASSWORD_HASH(aValue.toString(), aFormat);
+//$Section=Attribute setPropertyValueFormat$PASSWORD_HASH$Preserve=no
+    }
+    public void setPASSWORD_HASH(String aValue, String aType) {
+//$Section=Attribute setAsStringType$PASSWORD_HASH$Preserve=no
+        iPASSWORD_HASH.reset(aType, aValue);
+//$Section=Attribute setAsStringType$PASSWORD_HASH$Preserve=no
+    }
+    public PropertyValue getPASSWORD_HASHPropertyValue() {
+//$Section=Attribute getPropertyValue$PASSWORD_HASH$Preserve=no
+        return iPASSWORD_HASH;
+//$Section=Attribute getPropertyValue$PASSWORD_HASH$Preserve=no
+    }
+    public String getAttributeName_password_hash() {
+//$Section=Attribute getAttributeName$password_hash$Preserve=no
+        return "PASSWORD_HASH";
+//$Section=Attribute getAttributeName_$password_hash$Preserve=no
+    }
+    public int sizePASSWORD_HASH() {
+//$Section=Attribute size$PASSWORD_HASH$Preserve=no
+        return iPASSWORD_HASHSize;
+//$Section=Attribute size$PASSWORD_HASH$Preserve=no
+    }
+    public boolean isPASSWORD_HASHNullable() {
+//$Section=Attribute isNullable$PASSWORD_HASH$Preserve=no
+        return iPASSWORD_HASHIsNullable;
+//$Section=Attribute isNullable$PASSWORD_HASH$Preserve=no
+    }
+    public boolean isPASSWORD_HASHNull() {
+//$Section=Attribute isNull$PASSWORD_HASH$Preserve=no
+        if (iPASSWORD_HASH.getValueType() == PropertyValue.CONST_VALUE_TYPE_NULL) return true;
+        return false;
+//$Section=Attribute isNull$PASSWORD_HASH$Preserve=no
+    }
+    public void setPASSWORD_HASHNull() {
+//$Section=Attribute setNull$PASSWORD_HASH$Preserve=no
+        iPASSWORD_HASH.reset();
+//$Section=Attribute setNull$PASSWORD_HASH$Preserve=no
+    }
+    public void setPASSWORD_HASHSpaceToNull() {
+//$Section=Attribute setSpaceToNull$PASSWORD_HASH$Preserve=no
+        if (getPASSWORD_HASHPropertyValue().toString().trim().equals("")) setPASSWORD_HASHNull();
+//$Section=Attribute setSpaceToNull$PASSWORD_HASH$Preserve=no
+    }
+    public void setPASSWORD_HASHUpdate(boolean aUpdate) {
+//$Section=Attribute setUpdate$PASSWORD_HASH$Preserve=no
+        iPASSWORD_HASHUpdate = aUpdate;
+//$Section=Attribute setUpdate$PASSWORD_HASH$Preserve=no
+    }
+    public boolean getPASSWORD_HASHUpdate() {
+//$Section=Attribute getUpdate$PASSWORD_HASH$Preserve=no
+        return iPASSWORD_HASHUpdate;
+//$Section=Attribute getUpdate$PASSWORD_HASH$Preserve=no
+    }
+    public String getPASSWORD_HASHValueType() {
+//$Section=Attribute getValueType$PASSWORD_HASH$Preserve=no
+        return "string";
+//$Section=Attribute getValueType$PASSWORD_HASH$Preserve=no
+    }
+    public String getPASSWORD_HASHValueStereotype() {
+//$Section=Attribute getValueStereotype$PASSWORD_HASH$Preserve=no
+        return "";
+//$Section=Attribute getValueStereotype$PASSWORD_HASH$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// NAME
+//----------------------------------------------------------------------------
+    public String getNAME() {
+//$Section=Attribute get$NAME$Preserve=no
+        return iNAME.getValueString();
+//$Section=Attribute get$NAME$Preserve=no
+    }
+    public String getNAME(String aValue) {
+//$Section=Attribute get$NAME(String)$Preserve=no
+      if (isNAMENull()) return aValue;
+      return iNAME.getValueString();
+//$Section=Attribute get$NAME(String)$Preserve=no
+    }
+    public void setNAME(String aValue) {
+//$Section=Attribute set$NAME$Preserve=no
+        iNAME.reset(aValue);
+//$Section=Attribute set$NAME$Preserve=no
+    }
+    public void setNAME(PropertyValue aValue) {
+//$Section=Attribute setPropertyValue$NAME$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setNAMENull();
+          return;
+        }
+        setNAME(aValue.toString());
+//$Section=Attribute setPropertyValue$NAME$Preserve=no
+    }
+    public void setNAME(PropertyValue aValue, String aFormat) {
+//$Section=Attribute setPropertyValueFormat$NAME$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setNAMENull();
+          return;
+        }
+        setNAME(aValue.toString(), aFormat);
+//$Section=Attribute setPropertyValueFormat$NAME$Preserve=no
+    }
+    public void setNAME(String aValue, String aType) {
+//$Section=Attribute setAsStringType$NAME$Preserve=no
+        iNAME.reset(aType, aValue);
+//$Section=Attribute setAsStringType$NAME$Preserve=no
+    }
+    public PropertyValue getNAMEPropertyValue() {
+//$Section=Attribute getPropertyValue$NAME$Preserve=no
+        return iNAME;
+//$Section=Attribute getPropertyValue$NAME$Preserve=no
+    }
+    public String getAttributeName_name() {
+//$Section=Attribute getAttributeName$name$Preserve=no
+        return "NAME";
+//$Section=Attribute getAttributeName_$name$Preserve=no
+    }
+    public int sizeNAME() {
+//$Section=Attribute size$NAME$Preserve=no
+        return iNAMESize;
+//$Section=Attribute size$NAME$Preserve=no
+    }
+    public boolean isNAMENullable() {
+//$Section=Attribute isNullable$NAME$Preserve=no
+        return iNAMEIsNullable;
+//$Section=Attribute isNullable$NAME$Preserve=no
+    }
+    public boolean isNAMENull() {
+//$Section=Attribute isNull$NAME$Preserve=no
+        if (iNAME.getValueType() == PropertyValue.CONST_VALUE_TYPE_NULL) return true;
+        return false;
+//$Section=Attribute isNull$NAME$Preserve=no
+    }
+    public void setNAMENull() {
+//$Section=Attribute setNull$NAME$Preserve=no
+        iNAME.reset();
+//$Section=Attribute setNull$NAME$Preserve=no
+    }
+    public void setNAMESpaceToNull() {
+//$Section=Attribute setSpaceToNull$NAME$Preserve=no
+        if (getNAMEPropertyValue().toString().trim().equals("")) setNAMENull();
+//$Section=Attribute setSpaceToNull$NAME$Preserve=no
+    }
+    public void setNAMEUpdate(boolean aUpdate) {
+//$Section=Attribute setUpdate$NAME$Preserve=no
+        iNAMEUpdate = aUpdate;
+//$Section=Attribute setUpdate$NAME$Preserve=no
+    }
+    public boolean getNAMEUpdate() {
+//$Section=Attribute getUpdate$NAME$Preserve=no
+        return iNAMEUpdate;
+//$Section=Attribute getUpdate$NAME$Preserve=no
+    }
+    public String getNAMEValueType() {
+//$Section=Attribute getValueType$NAME$Preserve=no
+        return "string";
+//$Section=Attribute getValueType$NAME$Preserve=no
+    }
+    public String getNAMEValueStereotype() {
+//$Section=Attribute getValueStereotype$NAME$Preserve=no
+        return "";
+//$Section=Attribute getValueStereotype$NAME$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// EMAIL_VERIFIED
+//----------------------------------------------------------------------------
+    public boolean getEMAIL_VERIFIED() {
+//$Section=Attribute get$EMAIL_VERIFIED$Preserve=no
+        return iEMAIL_VERIFIED.getValueBoolean();
+//$Section=Attribute get$EMAIL_VERIFIED$Preserve=no
+    }
+    public boolean getEMAIL_VERIFIED(boolean aValue) {
+//$Section=Attribute get$EMAIL_VERIFIED(boolean)$Preserve=no
+      if (isEMAIL_VERIFIEDNull()) return aValue;
+      return iEMAIL_VERIFIED.getValueBoolean();
+//$Section=Attribute get$EMAIL_VERIFIED(boolean)$Preserve=no
+    }
+    public void setEMAIL_VERIFIED(boolean aValue) {
+//$Section=Attribute set$EMAIL_VERIFIED$Preserve=no
+        iEMAIL_VERIFIED.reset(aValue);
+//$Section=Attribute set$EMAIL_VERIFIED$Preserve=no
+    }
+    public void setEMAIL_VERIFIED(PropertyValue aValue) {
+//$Section=Attribute setPropertyValue$EMAIL_VERIFIED$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setEMAIL_VERIFIEDNull();
+          return;
+        }
+        setEMAIL_VERIFIED(aValue.toString());
+//$Section=Attribute setPropertyValue$EMAIL_VERIFIED$Preserve=no
+    }
+    public void setEMAIL_VERIFIED(PropertyValue aValue, String aFormat) {
+//$Section=Attribute setPropertyValueFormat$EMAIL_VERIFIED$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setEMAIL_VERIFIEDNull();
+          return;
+        }
+        setEMAIL_VERIFIED(aValue.toString(), aFormat);
+//$Section=Attribute setPropertyValueFormat$EMAIL_VERIFIED$Preserve=no
+    }
+    public void setEMAIL_VERIFIED(String aValue) {
+//$Section=Attribute setAsString$EMAIL_VERIFIED$Preserve=no
+        iEMAIL_VERIFIED.reset("boolean", aValue);
+//$Section=Attribute setAsString$EMAIL_VERIFIED$Preserve=no
+    }
+    public void setEMAIL_VERIFIED(String aValue, String aType) {
+//$Section=Attribute setAsStringType$EMAIL_VERIFIED$Preserve=no
+        iEMAIL_VERIFIED.reset(aType, aValue);
+//$Section=Attribute setAsStringType$EMAIL_VERIFIED$Preserve=no
+    }
+    public PropertyValue getEMAIL_VERIFIEDPropertyValue() {
+//$Section=Attribute getPropertyValue$EMAIL_VERIFIED$Preserve=no
+        return iEMAIL_VERIFIED;
+//$Section=Attribute getPropertyValue$EMAIL_VERIFIED$Preserve=no
+    }
+    public String getAttributeName_email_verified() {
+//$Section=Attribute getAttributeName$email_verified$Preserve=no
+        return "EMAIL_VERIFIED";
+//$Section=Attribute getAttributeName_$email_verified$Preserve=no
+    }
+    public int sizeEMAIL_VERIFIED() {
+//$Section=Attribute size$EMAIL_VERIFIED$Preserve=no
+        return iEMAIL_VERIFIEDSize;
+//$Section=Attribute size$EMAIL_VERIFIED$Preserve=no
+    }
+    public boolean isEMAIL_VERIFIEDNullable() {
+//$Section=Attribute isNullable$EMAIL_VERIFIED$Preserve=no
+        return iEMAIL_VERIFIEDIsNullable;
+//$Section=Attribute isNullable$EMAIL_VERIFIED$Preserve=no
+    }
+    public boolean isEMAIL_VERIFIEDNull() {
+//$Section=Attribute isNull$EMAIL_VERIFIED$Preserve=no
+        if (iEMAIL_VERIFIED.getValueType() == PropertyValue.CONST_VALUE_TYPE_NULL) return true;
+        return false;
+//$Section=Attribute isNull$EMAIL_VERIFIED$Preserve=no
+    }
+    public void setEMAIL_VERIFIEDNull() {
+//$Section=Attribute setNull$EMAIL_VERIFIED$Preserve=no
+        iEMAIL_VERIFIED.reset();
+//$Section=Attribute setNull$EMAIL_VERIFIED$Preserve=no
+    }
+    public void setEMAIL_VERIFIEDSpaceToNull() {
+//$Section=Attribute setSpaceToNull$EMAIL_VERIFIED$Preserve=no
+        if (getEMAIL_VERIFIEDPropertyValue().toString().trim().equals("")) setEMAIL_VERIFIEDNull();
+//$Section=Attribute setSpaceToNull$EMAIL_VERIFIED$Preserve=no
+    }
+    public void setEMAIL_VERIFIEDUpdate(boolean aUpdate) {
+//$Section=Attribute setUpdate$EMAIL_VERIFIED$Preserve=no
+        iEMAIL_VERIFIEDUpdate = aUpdate;
+//$Section=Attribute setUpdate$EMAIL_VERIFIED$Preserve=no
+    }
+    public boolean getEMAIL_VERIFIEDUpdate() {
+//$Section=Attribute getUpdate$EMAIL_VERIFIED$Preserve=no
+        return iEMAIL_VERIFIEDUpdate;
+//$Section=Attribute getUpdate$EMAIL_VERIFIED$Preserve=no
+    }
+    public String getEMAIL_VERIFIEDValueType() {
+//$Section=Attribute getValueType$EMAIL_VERIFIED$Preserve=no
+        return "boolean";
+//$Section=Attribute getValueType$EMAIL_VERIFIED$Preserve=no
+    }
+    public String getEMAIL_VERIFIEDValueStereotype() {
+//$Section=Attribute getValueStereotype$EMAIL_VERIFIED$Preserve=no
+        return "";
+//$Section=Attribute getValueStereotype$EMAIL_VERIFIED$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// VERIFICATION_CODE
+//----------------------------------------------------------------------------
+    public String getVERIFICATION_CODE() {
+//$Section=Attribute get$VERIFICATION_CODE$Preserve=no
+        return iVERIFICATION_CODE.getValueString();
+//$Section=Attribute get$VERIFICATION_CODE$Preserve=no
+    }
+    public String getVERIFICATION_CODE(String aValue) {
+//$Section=Attribute get$VERIFICATION_CODE(String)$Preserve=no
+      if (isVERIFICATION_CODENull()) return aValue;
+      return iVERIFICATION_CODE.getValueString();
+//$Section=Attribute get$VERIFICATION_CODE(String)$Preserve=no
+    }
+    public void setVERIFICATION_CODE(String aValue) {
+//$Section=Attribute set$VERIFICATION_CODE$Preserve=no
+        iVERIFICATION_CODE.reset(aValue);
+//$Section=Attribute set$VERIFICATION_CODE$Preserve=no
+    }
+    public void setVERIFICATION_CODE(PropertyValue aValue) {
+//$Section=Attribute setPropertyValue$VERIFICATION_CODE$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setVERIFICATION_CODENull();
+          return;
+        }
+        setVERIFICATION_CODE(aValue.toString());
+//$Section=Attribute setPropertyValue$VERIFICATION_CODE$Preserve=no
+    }
+    public void setVERIFICATION_CODE(PropertyValue aValue, String aFormat) {
+//$Section=Attribute setPropertyValueFormat$VERIFICATION_CODE$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setVERIFICATION_CODENull();
+          return;
+        }
+        setVERIFICATION_CODE(aValue.toString(), aFormat);
+//$Section=Attribute setPropertyValueFormat$VERIFICATION_CODE$Preserve=no
+    }
+    public void setVERIFICATION_CODE(String aValue, String aType) {
+//$Section=Attribute setAsStringType$VERIFICATION_CODE$Preserve=no
+        iVERIFICATION_CODE.reset(aType, aValue);
+//$Section=Attribute setAsStringType$VERIFICATION_CODE$Preserve=no
+    }
+    public PropertyValue getVERIFICATION_CODEPropertyValue() {
+//$Section=Attribute getPropertyValue$VERIFICATION_CODE$Preserve=no
+        return iVERIFICATION_CODE;
+//$Section=Attribute getPropertyValue$VERIFICATION_CODE$Preserve=no
+    }
+    public String getAttributeName_verification_code() {
+//$Section=Attribute getAttributeName$verification_code$Preserve=no
+        return "VERIFICATION_CODE";
+//$Section=Attribute getAttributeName_$verification_code$Preserve=no
+    }
+    public int sizeVERIFICATION_CODE() {
+//$Section=Attribute size$VERIFICATION_CODE$Preserve=no
+        return iVERIFICATION_CODESize;
+//$Section=Attribute size$VERIFICATION_CODE$Preserve=no
+    }
+    public boolean isVERIFICATION_CODENullable() {
+//$Section=Attribute isNullable$VERIFICATION_CODE$Preserve=no
+        return iVERIFICATION_CODEIsNullable;
+//$Section=Attribute isNullable$VERIFICATION_CODE$Preserve=no
+    }
+    public boolean isVERIFICATION_CODENull() {
+//$Section=Attribute isNull$VERIFICATION_CODE$Preserve=no
+        if (iVERIFICATION_CODE.getValueType() == PropertyValue.CONST_VALUE_TYPE_NULL) return true;
+        return false;
+//$Section=Attribute isNull$VERIFICATION_CODE$Preserve=no
+    }
+    public void setVERIFICATION_CODENull() {
+//$Section=Attribute setNull$VERIFICATION_CODE$Preserve=no
+        iVERIFICATION_CODE.reset();
+//$Section=Attribute setNull$VERIFICATION_CODE$Preserve=no
+    }
+    public void setVERIFICATION_CODESpaceToNull() {
+//$Section=Attribute setSpaceToNull$VERIFICATION_CODE$Preserve=no
+        if (getVERIFICATION_CODEPropertyValue().toString().trim().equals("")) setVERIFICATION_CODENull();
+//$Section=Attribute setSpaceToNull$VERIFICATION_CODE$Preserve=no
+    }
+    public void setVERIFICATION_CODEUpdate(boolean aUpdate) {
+//$Section=Attribute setUpdate$VERIFICATION_CODE$Preserve=no
+        iVERIFICATION_CODEUpdate = aUpdate;
+//$Section=Attribute setUpdate$VERIFICATION_CODE$Preserve=no
+    }
+    public boolean getVERIFICATION_CODEUpdate() {
+//$Section=Attribute getUpdate$VERIFICATION_CODE$Preserve=no
+        return iVERIFICATION_CODEUpdate;
+//$Section=Attribute getUpdate$VERIFICATION_CODE$Preserve=no
+    }
+    public String getVERIFICATION_CODEValueType() {
+//$Section=Attribute getValueType$VERIFICATION_CODE$Preserve=no
+        return "string";
+//$Section=Attribute getValueType$VERIFICATION_CODE$Preserve=no
+    }
+    public String getVERIFICATION_CODEValueStereotype() {
+//$Section=Attribute getValueStereotype$VERIFICATION_CODE$Preserve=no
+        return "";
+//$Section=Attribute getValueStereotype$VERIFICATION_CODE$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// VERIFICATION_CODE_EXPIRES_AT
+//----------------------------------------------------------------------------
+    public java.sql.Timestamp getVERIFICATION_CODE_EXPIRES_AT() {
+//$Section=Attribute get$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        return iVERIFICATION_CODE_EXPIRES_AT.getValueTimestamp();
+//$Section=Attribute get$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public java.sql.Timestamp getVERIFICATION_CODE_EXPIRES_AT(java.sql.Timestamp aValue) {
+//$Section=Attribute get$VERIFICATION_CODE_EXPIRES_AT(java.sql.Timestamp)$Preserve=no
+      if (isVERIFICATION_CODE_EXPIRES_ATNull()) return aValue;
+      return iVERIFICATION_CODE_EXPIRES_AT.getValueTimestamp();
+//$Section=Attribute get$VERIFICATION_CODE_EXPIRES_AT(java.sql.Timestamp)$Preserve=no
+    }
+    public void setVERIFICATION_CODE_EXPIRES_AT(java.sql.Timestamp aValue) {
+//$Section=Attribute set$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        iVERIFICATION_CODE_EXPIRES_AT.reset(aValue);
+//$Section=Attribute set$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public void setVERIFICATION_CODE_EXPIRES_AT(PropertyValue aValue) {
+//$Section=Attribute setPropertyValue$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setVERIFICATION_CODE_EXPIRES_ATNull();
+          return;
+        }
+        setVERIFICATION_CODE_EXPIRES_AT(aValue.toString());
+//$Section=Attribute setPropertyValue$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public void setVERIFICATION_CODE_EXPIRES_AT(PropertyValue aValue, String aFormat) {
+//$Section=Attribute setPropertyValueFormat$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setVERIFICATION_CODE_EXPIRES_ATNull();
+          return;
+        }
+        setVERIFICATION_CODE_EXPIRES_AT(aValue.toString(), aFormat);
+//$Section=Attribute setPropertyValueFormat$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public void setVERIFICATION_CODE_EXPIRES_AT(String aValue) {
+//$Section=Attribute setAsString$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        iVERIFICATION_CODE_EXPIRES_AT.reset("timestamp:yyyy-MM-dd HH:mm:ss.S", aValue);
+//$Section=Attribute setAsString$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public void setVERIFICATION_CODE_EXPIRES_AT(String aValue, String aType) {
+//$Section=Attribute setAsStringType$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        iVERIFICATION_CODE_EXPIRES_AT.reset(aType, aValue);
+//$Section=Attribute setAsStringType$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public PropertyValue getVERIFICATION_CODE_EXPIRES_ATPropertyValue() {
+//$Section=Attribute getPropertyValue$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        return iVERIFICATION_CODE_EXPIRES_AT;
+//$Section=Attribute getPropertyValue$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public String getAttributeName_verification_code_expires_at() {
+//$Section=Attribute getAttributeName$verification_code_expires_at$Preserve=no
+        return "VERIFICATION_CODE_EXPIRES_AT";
+//$Section=Attribute getAttributeName_$verification_code_expires_at$Preserve=no
+    }
+    public int sizeVERIFICATION_CODE_EXPIRES_AT() {
+//$Section=Attribute size$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        return iVERIFICATION_CODE_EXPIRES_ATSize;
+//$Section=Attribute size$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public boolean isVERIFICATION_CODE_EXPIRES_ATNullable() {
+//$Section=Attribute isNullable$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        return iVERIFICATION_CODE_EXPIRES_ATIsNullable;
+//$Section=Attribute isNullable$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public boolean isVERIFICATION_CODE_EXPIRES_ATNull() {
+//$Section=Attribute isNull$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        if (iVERIFICATION_CODE_EXPIRES_AT.getValueType() == PropertyValue.CONST_VALUE_TYPE_NULL) return true;
+        return false;
+//$Section=Attribute isNull$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public void setVERIFICATION_CODE_EXPIRES_ATNull() {
+//$Section=Attribute setNull$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        iVERIFICATION_CODE_EXPIRES_AT.reset();
+//$Section=Attribute setNull$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public void setVERIFICATION_CODE_EXPIRES_ATSpaceToNull() {
+//$Section=Attribute setSpaceToNull$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        if (getVERIFICATION_CODE_EXPIRES_ATPropertyValue().toString().trim().equals("")) setVERIFICATION_CODE_EXPIRES_ATNull();
+//$Section=Attribute setSpaceToNull$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public void setVERIFICATION_CODE_EXPIRES_ATUpdate(boolean aUpdate) {
+//$Section=Attribute setUpdate$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        iVERIFICATION_CODE_EXPIRES_ATUpdate = aUpdate;
+//$Section=Attribute setUpdate$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public boolean getVERIFICATION_CODE_EXPIRES_ATUpdate() {
+//$Section=Attribute getUpdate$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        return iVERIFICATION_CODE_EXPIRES_ATUpdate;
+//$Section=Attribute getUpdate$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public String getVERIFICATION_CODE_EXPIRES_ATValueType() {
+//$Section=Attribute getValueType$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        return "timestamp";
+//$Section=Attribute getValueType$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+    public String getVERIFICATION_CODE_EXPIRES_ATValueStereotype() {
+//$Section=Attribute getValueStereotype$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+        return "";
+//$Section=Attribute getValueStereotype$VERIFICATION_CODE_EXPIRES_AT$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// CREATED_AT
+//----------------------------------------------------------------------------
+    public java.sql.Timestamp getCREATED_AT() {
+//$Section=Attribute get$CREATED_AT$Preserve=no
+        return iCREATED_AT.getValueTimestamp();
+//$Section=Attribute get$CREATED_AT$Preserve=no
+    }
+    public java.sql.Timestamp getCREATED_AT(java.sql.Timestamp aValue) {
+//$Section=Attribute get$CREATED_AT(java.sql.Timestamp)$Preserve=no
+      if (isCREATED_ATNull()) return aValue;
+      return iCREATED_AT.getValueTimestamp();
+//$Section=Attribute get$CREATED_AT(java.sql.Timestamp)$Preserve=no
+    }
+    public void setCREATED_AT(java.sql.Timestamp aValue) {
+//$Section=Attribute set$CREATED_AT$Preserve=no
+        iCREATED_AT.reset(aValue);
+//$Section=Attribute set$CREATED_AT$Preserve=no
+    }
+    public void setCREATED_AT(PropertyValue aValue) {
+//$Section=Attribute setPropertyValue$CREATED_AT$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setCREATED_ATNull();
+          return;
+        }
+        setCREATED_AT(aValue.toString());
+//$Section=Attribute setPropertyValue$CREATED_AT$Preserve=no
+    }
+    public void setCREATED_AT(PropertyValue aValue, String aFormat) {
+//$Section=Attribute setPropertyValueFormat$CREATED_AT$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setCREATED_ATNull();
+          return;
+        }
+        setCREATED_AT(aValue.toString(), aFormat);
+//$Section=Attribute setPropertyValueFormat$CREATED_AT$Preserve=no
+    }
+    public void setCREATED_AT(String aValue) {
+//$Section=Attribute setAsString$CREATED_AT$Preserve=no
+        iCREATED_AT.reset("timestamp:yyyy-MM-dd HH:mm:ss.S", aValue);
+//$Section=Attribute setAsString$CREATED_AT$Preserve=no
+    }
+    public void setCREATED_AT(String aValue, String aType) {
+//$Section=Attribute setAsStringType$CREATED_AT$Preserve=no
+        iCREATED_AT.reset(aType, aValue);
+//$Section=Attribute setAsStringType$CREATED_AT$Preserve=no
+    }
+    public PropertyValue getCREATED_ATPropertyValue() {
+//$Section=Attribute getPropertyValue$CREATED_AT$Preserve=no
+        return iCREATED_AT;
+//$Section=Attribute getPropertyValue$CREATED_AT$Preserve=no
+    }
+    public String getAttributeName_created_at() {
+//$Section=Attribute getAttributeName$created_at$Preserve=no
+        return "CREATED_AT";
+//$Section=Attribute getAttributeName_$created_at$Preserve=no
+    }
+    public int sizeCREATED_AT() {
+//$Section=Attribute size$CREATED_AT$Preserve=no
+        return iCREATED_ATSize;
+//$Section=Attribute size$CREATED_AT$Preserve=no
+    }
+    public boolean isCREATED_ATNullable() {
+//$Section=Attribute isNullable$CREATED_AT$Preserve=no
+        return iCREATED_ATIsNullable;
+//$Section=Attribute isNullable$CREATED_AT$Preserve=no
+    }
+    public boolean isCREATED_ATNull() {
+//$Section=Attribute isNull$CREATED_AT$Preserve=no
+        if (iCREATED_AT.getValueType() == PropertyValue.CONST_VALUE_TYPE_NULL) return true;
+        return false;
+//$Section=Attribute isNull$CREATED_AT$Preserve=no
+    }
+    public void setCREATED_ATNull() {
+//$Section=Attribute setNull$CREATED_AT$Preserve=no
+        iCREATED_AT.reset();
+//$Section=Attribute setNull$CREATED_AT$Preserve=no
+    }
+    public void setCREATED_ATSpaceToNull() {
+//$Section=Attribute setSpaceToNull$CREATED_AT$Preserve=no
+        if (getCREATED_ATPropertyValue().toString().trim().equals("")) setCREATED_ATNull();
+//$Section=Attribute setSpaceToNull$CREATED_AT$Preserve=no
+    }
+    public void setCREATED_ATUpdate(boolean aUpdate) {
+//$Section=Attribute setUpdate$CREATED_AT$Preserve=no
+        iCREATED_ATUpdate = aUpdate;
+//$Section=Attribute setUpdate$CREATED_AT$Preserve=no
+    }
+    public boolean getCREATED_ATUpdate() {
+//$Section=Attribute getUpdate$CREATED_AT$Preserve=no
+        return iCREATED_ATUpdate;
+//$Section=Attribute getUpdate$CREATED_AT$Preserve=no
+    }
+    public String getCREATED_ATValueType() {
+//$Section=Attribute getValueType$CREATED_AT$Preserve=no
+        return "timestamp";
+//$Section=Attribute getValueType$CREATED_AT$Preserve=no
+    }
+    public String getCREATED_ATValueStereotype() {
+//$Section=Attribute getValueStereotype$CREATED_AT$Preserve=no
+        return "";
+//$Section=Attribute getValueStereotype$CREATED_AT$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// UPDATED_AT
+//----------------------------------------------------------------------------
+    public java.sql.Timestamp getUPDATED_AT() {
+//$Section=Attribute get$UPDATED_AT$Preserve=no
+        return iUPDATED_AT.getValueTimestamp();
+//$Section=Attribute get$UPDATED_AT$Preserve=no
+    }
+    public java.sql.Timestamp getUPDATED_AT(java.sql.Timestamp aValue) {
+//$Section=Attribute get$UPDATED_AT(java.sql.Timestamp)$Preserve=no
+      if (isUPDATED_ATNull()) return aValue;
+      return iUPDATED_AT.getValueTimestamp();
+//$Section=Attribute get$UPDATED_AT(java.sql.Timestamp)$Preserve=no
+    }
+    public void setUPDATED_AT(java.sql.Timestamp aValue) {
+//$Section=Attribute set$UPDATED_AT$Preserve=no
+        iUPDATED_AT.reset(aValue);
+//$Section=Attribute set$UPDATED_AT$Preserve=no
+    }
+    public void setUPDATED_AT(PropertyValue aValue) {
+//$Section=Attribute setPropertyValue$UPDATED_AT$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setUPDATED_ATNull();
+          return;
+        }
+        setUPDATED_AT(aValue.toString());
+//$Section=Attribute setPropertyValue$UPDATED_AT$Preserve=no
+    }
+    public void setUPDATED_AT(PropertyValue aValue, String aFormat) {
+//$Section=Attribute setPropertyValueFormat$UPDATED_AT$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setUPDATED_ATNull();
+          return;
+        }
+        setUPDATED_AT(aValue.toString(), aFormat);
+//$Section=Attribute setPropertyValueFormat$UPDATED_AT$Preserve=no
+    }
+    public void setUPDATED_AT(String aValue) {
+//$Section=Attribute setAsString$UPDATED_AT$Preserve=no
+        iUPDATED_AT.reset("timestamp:yyyy-MM-dd HH:mm:ss.S", aValue);
+//$Section=Attribute setAsString$UPDATED_AT$Preserve=no
+    }
+    public void setUPDATED_AT(String aValue, String aType) {
+//$Section=Attribute setAsStringType$UPDATED_AT$Preserve=no
+        iUPDATED_AT.reset(aType, aValue);
+//$Section=Attribute setAsStringType$UPDATED_AT$Preserve=no
+    }
+    public PropertyValue getUPDATED_ATPropertyValue() {
+//$Section=Attribute getPropertyValue$UPDATED_AT$Preserve=no
+        return iUPDATED_AT;
+//$Section=Attribute getPropertyValue$UPDATED_AT$Preserve=no
+    }
+    public String getAttributeName_updated_at() {
+//$Section=Attribute getAttributeName$updated_at$Preserve=no
+        return "UPDATED_AT";
+//$Section=Attribute getAttributeName_$updated_at$Preserve=no
+    }
+    public int sizeUPDATED_AT() {
+//$Section=Attribute size$UPDATED_AT$Preserve=no
+        return iUPDATED_ATSize;
+//$Section=Attribute size$UPDATED_AT$Preserve=no
+    }
+    public boolean isUPDATED_ATNullable() {
+//$Section=Attribute isNullable$UPDATED_AT$Preserve=no
+        return iUPDATED_ATIsNullable;
+//$Section=Attribute isNullable$UPDATED_AT$Preserve=no
+    }
+    public boolean isUPDATED_ATNull() {
+//$Section=Attribute isNull$UPDATED_AT$Preserve=no
+        if (iUPDATED_AT.getValueType() == PropertyValue.CONST_VALUE_TYPE_NULL) return true;
+        return false;
+//$Section=Attribute isNull$UPDATED_AT$Preserve=no
+    }
+    public void setUPDATED_ATNull() {
+//$Section=Attribute setNull$UPDATED_AT$Preserve=no
+        iUPDATED_AT.reset();
+//$Section=Attribute setNull$UPDATED_AT$Preserve=no
+    }
+    public void setUPDATED_ATSpaceToNull() {
+//$Section=Attribute setSpaceToNull$UPDATED_AT$Preserve=no
+        if (getUPDATED_ATPropertyValue().toString().trim().equals("")) setUPDATED_ATNull();
+//$Section=Attribute setSpaceToNull$UPDATED_AT$Preserve=no
+    }
+    public void setUPDATED_ATUpdate(boolean aUpdate) {
+//$Section=Attribute setUpdate$UPDATED_AT$Preserve=no
+        iUPDATED_ATUpdate = aUpdate;
+//$Section=Attribute setUpdate$UPDATED_AT$Preserve=no
+    }
+    public boolean getUPDATED_ATUpdate() {
+//$Section=Attribute getUpdate$UPDATED_AT$Preserve=no
+        return iUPDATED_ATUpdate;
+//$Section=Attribute getUpdate$UPDATED_AT$Preserve=no
+    }
+    public String getUPDATED_ATValueType() {
+//$Section=Attribute getValueType$UPDATED_AT$Preserve=no
+        return "timestamp";
+//$Section=Attribute getValueType$UPDATED_AT$Preserve=no
+    }
+    public String getUPDATED_ATValueStereotype() {
+//$Section=Attribute getValueStereotype$UPDATED_AT$Preserve=no
+        return "";
+//$Section=Attribute getValueStereotype$UPDATED_AT$Preserve=no
+    }
+
+//----------------------------------------------------------------------------
+// LAST_LOGIN
+//----------------------------------------------------------------------------
+    public java.sql.Timestamp getLAST_LOGIN() {
+//$Section=Attribute get$LAST_LOGIN$Preserve=no
+        return iLAST_LOGIN.getValueTimestamp();
+//$Section=Attribute get$LAST_LOGIN$Preserve=no
+    }
+    public java.sql.Timestamp getLAST_LOGIN(java.sql.Timestamp aValue) {
+//$Section=Attribute get$LAST_LOGIN(java.sql.Timestamp)$Preserve=no
+      if (isLAST_LOGINNull()) return aValue;
+      return iLAST_LOGIN.getValueTimestamp();
+//$Section=Attribute get$LAST_LOGIN(java.sql.Timestamp)$Preserve=no
+    }
+    public void setLAST_LOGIN(java.sql.Timestamp aValue) {
+//$Section=Attribute set$LAST_LOGIN$Preserve=no
+        iLAST_LOGIN.reset(aValue);
+//$Section=Attribute set$LAST_LOGIN$Preserve=no
+    }
+    public void setLAST_LOGIN(PropertyValue aValue) {
+//$Section=Attribute setPropertyValue$LAST_LOGIN$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setLAST_LOGINNull();
+          return;
+        }
+        setLAST_LOGIN(aValue.toString());
+//$Section=Attribute setPropertyValue$LAST_LOGIN$Preserve=no
+    }
+    public void setLAST_LOGIN(PropertyValue aValue, String aFormat) {
+//$Section=Attribute setPropertyValueFormat$LAST_LOGIN$Preserve=no
+        if (aValue.getType().equals("null")) {
+          setLAST_LOGINNull();
+          return;
+        }
+        setLAST_LOGIN(aValue.toString(), aFormat);
+//$Section=Attribute setPropertyValueFormat$LAST_LOGIN$Preserve=no
+    }
+    public void setLAST_LOGIN(String aValue) {
+//$Section=Attribute setAsString$LAST_LOGIN$Preserve=no
+        iLAST_LOGIN.reset("timestamp:yyyy-MM-dd HH:mm:ss.S", aValue);
+//$Section=Attribute setAsString$LAST_LOGIN$Preserve=no
+    }
+    public void setLAST_LOGIN(String aValue, String aType) {
+//$Section=Attribute setAsStringType$LAST_LOGIN$Preserve=no
+        iLAST_LOGIN.reset(aType, aValue);
+//$Section=Attribute setAsStringType$LAST_LOGIN$Preserve=no
+    }
+    public PropertyValue getLAST_LOGINPropertyValue() {
+//$Section=Attribute getPropertyValue$LAST_LOGIN$Preserve=no
+        return iLAST_LOGIN;
+//$Section=Attribute getPropertyValue$LAST_LOGIN$Preserve=no
+    }
+    public String getAttributeName_last_login() {
+//$Section=Attribute getAttributeName$last_login$Preserve=no
+        return "LAST_LOGIN";
+//$Section=Attribute getAttributeName_$last_login$Preserve=no
+    }
+    public int sizeLAST_LOGIN() {
+//$Section=Attribute size$LAST_LOGIN$Preserve=no
+        return iLAST_LOGINSize;
+//$Section=Attribute size$LAST_LOGIN$Preserve=no
+    }
+    public boolean isLAST_LOGINNullable() {
+//$Section=Attribute isNullable$LAST_LOGIN$Preserve=no
+        return iLAST_LOGINIsNullable;
+//$Section=Attribute isNullable$LAST_LOGIN$Preserve=no
+    }
+    public boolean isLAST_LOGINNull() {
+//$Section=Attribute isNull$LAST_LOGIN$Preserve=no
+        if (iLAST_LOGIN.getValueType() == PropertyValue.CONST_VALUE_TYPE_NULL) return true;
+        return false;
+//$Section=Attribute isNull$LAST_LOGIN$Preserve=no
+    }
+    public void setLAST_LOGINNull() {
+//$Section=Attribute setNull$LAST_LOGIN$Preserve=no
+        iLAST_LOGIN.reset();
+//$Section=Attribute setNull$LAST_LOGIN$Preserve=no
+    }
+    public void setLAST_LOGINSpaceToNull() {
+//$Section=Attribute setSpaceToNull$LAST_LOGIN$Preserve=no
+        if (getLAST_LOGINPropertyValue().toString().trim().equals("")) setLAST_LOGINNull();
+//$Section=Attribute setSpaceToNull$LAST_LOGIN$Preserve=no
+    }
+    public void setLAST_LOGINUpdate(boolean aUpdate) {
+//$Section=Attribute setUpdate$LAST_LOGIN$Preserve=no
+        iLAST_LOGINUpdate = aUpdate;
+//$Section=Attribute setUpdate$LAST_LOGIN$Preserve=no
+    }
+    public boolean getLAST_LOGINUpdate() {
+//$Section=Attribute getUpdate$LAST_LOGIN$Preserve=no
+        return iLAST_LOGINUpdate;
+//$Section=Attribute getUpdate$LAST_LOGIN$Preserve=no
+    }
+    public String getLAST_LOGINValueType() {
+//$Section=Attribute getValueType$LAST_LOGIN$Preserve=no
+        return "timestamp";
+//$Section=Attribute getValueType$LAST_LOGIN$Preserve=no
+    }
+    public String getLAST_LOGINValueStereotype() {
+//$Section=Attribute getValueStereotype$LAST_LOGIN$Preserve=no
+        return "";
+//$Section=Attribute getValueStereotype$LAST_LOGIN$Preserve=no
+    }
+
+
+//$Section=Deleted$Preserve=yes
+
+//----------------------------------------------------------------------------
+// This section contains orphaned code from deleted operations.
+//----------------------------------------------------------------------------
+
+//$Section=Deleted$Preserve=no
+
+//End of class---------------
+}

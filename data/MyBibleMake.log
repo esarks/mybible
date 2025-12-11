@@ -1,0 +1,96 @@
+========================================
+JAC MakeAll - Enhanced Logging
+Started: 2025-12-11 04:32:06
+Script: com.mybible.data.MyBibleMake
+Force rebuild: true
+========================================
+
+Loading main configuration: C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\app\com\mybible\data\MyBibleMake.xml
+  Success: Main XML loaded
+
+Loading component inventory files...
+Found 1 component inventory files
+  [1/1] Loading: C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\app\com\mybible\data\MyBibleComponents.xml
+    WARNING: Components file com.mybible.data.MyBibleComponents doesn't contain <components> tag.
+
+========================================
+PHASE 1: Dependency Resolution
+========================================
+Total components to process: 1
+
+Processing [1/1]: AUTH_USERS
+  Adding component: AUTH_USERS
+    Type: SqlTable
+    Source: com.mybible.data.MyBibleDdl
+    Added: AUTH_USERS
+    Scheduling: DDL + JEO + Services
+    WARNING: DbConnection "mybible" not found in Properties.xml
+
+========================================
+PHASE 2: Code Generation
+========================================
+
+--- Running DDL Generation ---
+Processing 1 DDL script(s)...
+  [1/1] Generating DDL for 1 entities: com.mybible.data.MyBibleDdl
+    [1/1] Entity: AUTH_USERS
+      Method: createTable
+createTable: com.mybible.data.MyBibleDdl - AUTH_USERS
+GenerateDdl:generateDbTable XML=com.mybible.data.MyBibleDdl, Packge=com.mybible.data, Table=AUTH_USERS
+      Success: DDL generated
+    Events (2):
+    FATAL: Cannot invoke "com.esarks.jac.DbConnection.getStereotype()" because "aDbConnection" is null
+    FATAL: Cannot invoke "com.esarks.jac.DbConnection.getMake()" because "lDbConnection" is null
+Complete: DDL generation (1 files)
+--- Running JEO Generation ---
+Processing 1 JEO script(s)...
+  [1/1] Generating JEOs for 1 entities: com.mybible.data.MyBibleDdl
+    [1/1] Entity: AUTH_USERS
+      Method: createTable
+createTableJeo: XML=com.mybible.data.MyBibleDdl Table=AUTH_USERS
+      Success: JEO generated
+      Building script: com.mybible.data.AUTH_USERS
+Making AUTH_USERS
+      Success: Script built
+      Compile: C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\jacBuild24\classes\com\mybible\data\AUTH_USERS.java, Script: com.mybible.data.MyBibleDdl, Entity: AUTH_USERS
+      Compiling 1 file(s)...
+Compiling 1 Scripts...
+1. C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\jacBuild24\classes\com\mybible\data\AUTH_USERS.java
+      Success: Compilation complete
+Complete: JEO generation (1 files)
+--- Running Script Generation ---
+Processing 2 script(s)...
+  [1/2] Processing: com.esarks.jac.generators.GenerateService
+    Method: generateServices
+    Argument: com.mybible.data.AUTH_USERSCrud_Crud
+generateServices: com.mybible.data.AUTH_USERSCrud_Crud
+    Success: Method executed
+  [2/2] Processing: com.mybible.data.AUTH_USERSCrud
+    Context: ?
+    XML exists, parsing...
+    Context: micScriptService
+    Script.buildScript... com.mybible.data.AUTH_USERSCrud
+Making AUTH_USERSCrud
+    Success: Script built
+    compile = 
+Complete: Script generation
+
+========================================
+BUILD SUMMARY
+========================================
+Components processed:    1
+DDL files generated:     1
+JEO files generated:     1
+Service files generated: 1
+Report files generated:  0
+ReportPro files generated: 0
+Controller files generated: 0
+Dtable files generated:  0
+Frame files generated:   0
+Files compiled:          1
+Errors encountered:      3
+Elapsed time:            0.919 seconds
+
+WARNING: BUILD COMPLETED WITH 3 ERROR(S)
+Finished: 2025-12-11 04:32:07
+========================================

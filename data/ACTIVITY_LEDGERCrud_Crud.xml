@@ -1,0 +1,255 @@
+  <com.esarks.arm.schemas.services.root name="com.mybible.data.ACTIVITY_LEDGERCrud">
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="batchCreateACTIVITY_LEDGER" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement type="PreparedStatement" method="executeUpdate">
+          INSERT INTO $ACTIVITY_LEDGER (ID,USER_ID,EVENT_TYPE,EVENT_DATE,REFERENCE_TYPE,REFERENCE_ID,NOTES,CREATED_AT) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER" iterate="true">
+              <value attribute="ID" />
+              <value attribute="USER_ID" />
+              <value attribute="EVENT_TYPE" />
+              <value attribute="EVENT_DATE" />
+              <value attribute="REFERENCE_TYPE" />
+              <value attribute="REFERENCE_ID" />
+              <value attribute="NOTES" />
+              <value attribute="CREATED_AT" />
+            </jeo>
+          </jeo>
+        </value>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="batchCreateACTIVITY_LEDGERWithIdentity" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement stereotype="sqlServer" type="PreparedStatement" method="executeUpdate">
+          SET IDENTITY_INSERT $ACTIVITY_LEDGER ON
+          INSERT INTO $ACTIVITY_LEDGER (ID,USER_ID,EVENT_TYPE,EVENT_DATE,REFERENCE_TYPE,REFERENCE_ID,NOTES,CREATED_AT) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <statement stereotype="postgreSql" type="PreparedStatement" method="executeUpdate">
+          INSERT INTO $ACTIVITY_LEDGER (ID,USER_ID,EVENT_TYPE,EVENT_DATE,REFERENCE_TYPE,REFERENCE_ID,NOTES,CREATED_AT) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <statement stereotype="mySql" type="PreparedStatement" method="executeUpdate">
+          INSERT INTO $ACTIVITY_LEDGER (ID,USER_ID,EVENT_TYPE,EVENT_DATE,REFERENCE_TYPE,REFERENCE_ID,NOTES,CREATED_AT) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER" iterate="true">
+              <value attribute="ID" />
+              <value attribute="USER_ID" />
+              <value attribute="EVENT_TYPE" />
+              <value attribute="EVENT_DATE" />
+              <value attribute="REFERENCE_TYPE" />
+              <value attribute="REFERENCE_ID" />
+              <value attribute="NOTES" />
+              <value attribute="CREATED_AT" />
+            </jeo>
+          </jeo>
+        </value>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="createACTIVITY_LEDGER" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql stereotype="sqlServer">
+        <statement type="CallableStatement" method="executeQuery">
+          BEGIN
+          INSERT INTO $ACTIVITY_LEDGER (ID,USER_ID,EVENT_TYPE,EVENT_DATE,REFERENCE_TYPE,REFERENCE_ID,NOTES,CREATED_AT) VALUES (?,?,?,?,?,?,?,?)
+          SELECT * FROM $ACTIVITY_LEDGER WHERE ID=?          END
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER">
+              <value attribute="ID" />
+              <value attribute="USER_ID" />
+              <value attribute="EVENT_TYPE" />
+              <value attribute="EVENT_DATE" />
+              <value attribute="REFERENCE_TYPE" />
+              <value attribute="REFERENCE_ID" />
+              <value attribute="NOTES" />
+              <value attribute="CREATED_AT" />
+              <value attribute="ID" />
+            </jeo>
+          </jeo>
+        </value>
+        <result>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER" />
+          </jeo>
+        </result>
+      </sql>
+      <sql stereotype="postgreSql">
+        <statement type="PreparedStatement" method="executeUpdate">
+          INSERT INTO $ACTIVITY_LEDGER (ID,USER_ID,EVENT_TYPE,EVENT_DATE,REFERENCE_TYPE,REFERENCE_ID,NOTES,CREATED_AT) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER">
+              <value attribute="ID" />
+              <value attribute="USER_ID" />
+              <value attribute="EVENT_TYPE" />
+              <value attribute="EVENT_DATE" />
+              <value attribute="REFERENCE_TYPE" />
+              <value attribute="REFERENCE_ID" />
+              <value attribute="NOTES" />
+              <value attribute="CREATED_AT" />
+            </jeo>
+          </jeo>
+        </value>
+      </sql>
+      <sql stereotype="postgreSql">
+        <statement type="PreparedStatement" method="executeQuery">
+          SELECT * FROM $ACTIVITY_LEDGER WHERE ID=?        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER">
+              <value attribute="ID" />
+            </jeo>
+          </jeo>
+        </value>
+        <result>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER" />
+          </jeo>
+        </result>
+      </sql>
+      <sql stereotype="mySql">
+        <statement type="PreparedStatement" method="executeUpdate">
+          INSERT INTO $ACTIVITY_LEDGER (ID,USER_ID,EVENT_TYPE,EVENT_DATE,REFERENCE_TYPE,REFERENCE_ID,NOTES,CREATED_AT) VALUES (?,?,?,?,?,?,?,?)
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER">
+              <value attribute="ID" />
+              <value attribute="USER_ID" />
+              <value attribute="EVENT_TYPE" />
+              <value attribute="EVENT_DATE" />
+              <value attribute="REFERENCE_TYPE" />
+              <value attribute="REFERENCE_ID" />
+              <value attribute="NOTES" />
+              <value attribute="CREATED_AT" />
+            </jeo>
+          </jeo>
+        </value>
+      </sql>
+      <sql stereotype="mySql">
+        <statement type="PreparedStatement" method="executeQuery">
+          SELECT * FROM $ACTIVITY_LEDGER WHERE ID=?        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER">
+              <value attribute="ID" />
+            </jeo>
+          </jeo>
+        </value>
+        <result>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER" />
+          </jeo>
+        </result>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="uidReadACTIVITY_LEDGER" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement type="PreparedStatement" method="executeQuery">
+          SELECT * FROM $ACTIVITY_LEDGER $*where
+        </statement>
+        <where>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER" >
+              <where clause="ID=?" attribute="ID" />
+            </jeo>
+          </jeo>
+        </where>
+        <result>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER" />
+          </jeo>
+        </result>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="readACTIVITY_LEDGER" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement type="PreparedStatement" method="executeQuery">
+          SELECT $*top * FROM $ACTIVITY_LEDGER $*where $*order $*limit
+        </statement>
+        <result>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER" />
+          </jeo>
+        </result>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="deleteACTIVITY_LEDGER" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement type="PreparedStatement" method="executeUpdate">
+          DELETE FROM $ACTIVITY_LEDGER
+        </statement>
+        <where>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER" >
+              <where clause="ID=?" attribute="ID" />
+            </jeo>
+          </jeo>
+        </where>
+      </sql>
+    </service>
+
+<!-- -->
+<!-- -->
+<!-- -->
+
+    <service name="uidUpdateACTIVITY_LEDGER" jeo="com.esarks.arm.model.jeo.ServiceJeo">
+      <sql>
+        <statement type="PreparedStatement" method="executeUpdate">
+          UPDATE $ACTIVITY_LEDGER SET USER_ID=?, EVENT_TYPE=?, EVENT_DATE=?, REFERENCE_TYPE=?, REFERENCE_ID=?, NOTES=?, CREATED_AT=? WHERE ID=?
+        </statement>
+        <value>
+          <jeo name="com.esarks.arm.model.jeo.RequestJeo">
+            <jeo name="com.mybible.data.ACTIVITY_LEDGER">
+              <value attribute="USER_ID" />
+              <value attribute="EVENT_TYPE" />
+              <value attribute="EVENT_DATE" />
+              <value attribute="REFERENCE_TYPE" />
+              <value attribute="REFERENCE_ID" />
+              <value attribute="NOTES" />
+              <value attribute="CREATED_AT" />
+              <value attribute="ID" />
+            </jeo>
+          </jeo>
+        </value>
+        <count>
+          <jeo name="com.esarks.arm.model.jeo.ReplyJeo">
+          </jeo>
+        </count>
+      </sql>
+    </service>
+  </com.esarks.arm.schemas.services.root>

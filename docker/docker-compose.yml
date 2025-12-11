@@ -1,0 +1,60 @@
+# MyBible Docker Compose Configuration
+# For local development with PostgreSQL
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database (local development)
+  postgres:
+    image: postgres:15-alpine
+    container_name: mybible-postgres
+    environment:
+      POSTGRES_DB: mybible_db
+      POSTGRES_USER: mybible_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secure_password_change_me}
+    ports:
+      - "5432:5432"
+    volumes:
+      - mybible-postgres-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mybible_user -d mybible_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MyBible JAC Application
+  mybible:
+    build:
+      context: ../../../..
+      dockerfile: app/com/mybible/docker/Dockerfile
+    container_name: mybible-app
+    ports:
+      - "8080:8080"
+    environment:
+      # Database connection (local postgres)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: mybible_db
+      DB_USER: mybible_user
+      DB_PASSWORD: ${DB_PASSWORD:-secure_password_change_me}
+      # JWT configuration
+      JWT_SECRET: ${JWT_SECRET:-mybible-dev-secret-change-in-production-32chars}
+      # Server configuration
+      PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  mybible-postgres-data:
+    driver: local
+
+networks:
+  default:
+    name: mybible-network

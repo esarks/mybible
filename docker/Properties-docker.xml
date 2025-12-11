@@ -1,0 +1,51 @@
+<com.esarks.arm.schemas.properties.root>
+
+  <property>default
+
+    <context>default</context>
+
+    <dbTypes name="postgresql">
+      <boolean property="getValueBoolean" java="boolean" setString="boolean" jdbc="Boolean">bit</boolean>
+      <byte property="getValueByte" java="byte" setString="byte" jdbc="Byte">tinyint</byte>
+      <short property="getValueShort" java="short" setString="short" jdbc="Short">smallint</short>
+      <int property="getValueInt" java="int" setString="int" jdbc="Int">int</int>
+      <integer property="getValueInt" java="int" setString="int" jdbc="Int">int</integer>
+      <long property="getValueLong" java="long" setString="long" jdbc="Long">bigint</long>
+      <char size="true" property="getValueChar" java="char" setString="char" jdbc="Char">char</char>
+      <float property="getValueFloat" java="float" setString="float" jdbc="Float">real</float>
+      <double property="getValueDouble" java="double" setString="double" jdbc="Double">float</double>
+      <string size="true" property="getValueString" java="String" jdbc="String">varchar</string>
+      <text property="getValueString" java="String" jdbc="String">text</text>
+      <date property="getValueDate" jdbcProperty="getValueSqlDate" java="java.util.Date" setString="date:yyyy-MM-dd" jdbc="Date">datetime</date>
+      <time property="getValueTime" java="java.sql.Time" setString="time:yyyy-MM-dd HH:mm:ss.S" jdbc="Time">datetime</time>
+      <datetime property="getValueTimestamp" java="java.sql.Timestamp" setString="timestamp:yyyy-MM-dd HH:mm:ss.S" jdbc="Timestamp">datetime</datetime>
+      <timestamp property="getValueTimestamp" java="java.sql.Timestamp" setString="timestamp:yyyy-MM-dd HH:mm:ss.S" jdbc="Timestamp">datetime</timestamp>
+    </dbTypes>
+
+    <dbConnection name="application" openCount="5">
+      <jdbcClass>org.postgresql.Driver</jdbcClass>
+      <jdbcConnection>jdbc:postgresql://__DB_HOST__:__DB_PORT__/mybible_db</jdbcConnection>
+      <jdbcUser>mybible_user</jdbcUser>
+      <jdbcPassword>__DB_PASSWORD__</jdbcPassword>
+      <dbTypes>postgresql</dbTypes>
+      <catalog>public</catalog>
+      <owner></owner>
+      <stereotype>postgreSql</stereotype>
+      <make>false</make>
+    </dbConnection>
+
+    <dbConnection name="mybible" openCount="5">
+      <jdbcClass>org.postgresql.Driver</jdbcClass>
+      <jdbcConnection>jdbc:postgresql://__DB_HOST__:__DB_PORT__/mybible_db</jdbcConnection>
+      <jdbcUser>mybible_user</jdbcUser>
+      <jdbcPassword>__DB_PASSWORD__</jdbcPassword>
+      <dbTypes>postgresql</dbTypes>
+      <catalog>public</catalog>
+      <owner></owner>
+      <stereotype>postgreSql</stereotype>
+      <make>false</make>
+    </dbConnection>
+
+  </property>
+
+</com.esarks.arm.schemas.properties.root>

@@ -584,11 +584,58 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/search?q=love&t=kjv"
 
 ---
 
+## Google Cloud Project
+
+| Setting | Value |
+|---------|-------|
+| **Project Name** | mybible |
+| **Project ID** | `mybible-480818` |
+| **Project Number** | 202552398298 |
+| **Region** | us-central1 |
+| **Cloud SQL Instance** | mybible-db |
+| **Database Name** | mybible_db |
+| **Database User** | mybible_user |
+
+### Cloud SQL Connection
+
+```bash
+# Connection name (for Cloud Run)
+mybible-480818:us-central1:mybible-db
+
+# Direct connection (for local development with Cloud SQL Proxy)
+cloud-sql-proxy mybible-480818:us-central1:mybible-db
+
+# JDBC URL (via proxy on localhost:5432)
+jdbc:postgresql://localhost:5432/mybible_db
+```
+
+### Useful gcloud Commands
+
+```bash
+# Set project
+gcloud config set project mybible-480818
+
+# View Cloud SQL instances
+gcloud sql instances list
+
+# Connect to database
+gcloud sql connect mybible-db --user=mybible_user --database=mybible_db
+
+# View instance details
+gcloud sql instances describe mybible-db
+```
+
+---
+
 ## Development Status
 
 ### Phase 1: Foundation (Current)
 - [x] CLAUDE.md created with AllowanceAlley patterns
 - [x] Bible JSON files copied to bibles/ folder
+- [x] Google Cloud project configured (mybible-480818)
+- [x] Cloud SQL instance created (mybible-db)
+- [x] Database created (mybible_db)
+- [x] Database user created (mybible_user)
 - [ ] Create MyBibleDdl.xml schema definitions
 - [ ] Generate JEO and CRUD classes
 - [ ] Create Properties.xml configuration
@@ -611,7 +658,7 @@ Invoke-RestMethod -Uri "http://localhost:8080/api/search?q=love&t=kjv"
 - [ ] Create Dockerfile
 - [ ] Configure docker-compose.yml
 - [ ] Deploy to Google Cloud Run
-- [ ] Set up Cloud SQL
+- [ ] Connect to Cloud SQL
 
 ---
 

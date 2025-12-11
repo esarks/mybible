@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MyBible MakeAll Configuration
+  Orchestrates generation of DDL and JEO for all tables
+
+  Usage:
+    cd C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\app\com\mybible\data
+    ..\..\..\..\jacBuild24\bin\Jrun2.bat RunMakeAll.jrun
+-->
+<makeAll>
+
+  <!-- Force full regeneration of all artifacts -->
+  <force>true</force>
+
+  <!-- Component Inventory - Points to MyBibleComponents.xml -->
+  <componentInventory>com.mybible.data.MyBibleComponents</componentInventory>
+
+  <!-- MyBible Database Tables -->
+  <component>AUTH_USERS</component>
+
+</makeAll>

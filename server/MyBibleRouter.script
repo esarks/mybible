@@ -1,0 +1,1263 @@
+context micScriptComponent
+end
+
+public void execute() {
+%>
+==============================================================================
+                    MyBible Application Server
+                    Personal Bible Study Application
+==============================================================================
+Starting server...
+<%
+
+int port = 8080;
+String contextPath = "";
+
+// Initialize CRUD services - they handle database connections internally
+final com.mybible.data.AUTH_USERSCrud authUsersCrud = new com.mybible.data.AUTH_USERSCrud(iScript);
+System.out.println("[CRUD] AUTH_USERSCrud service initialized");
+
+// Initialize EmailService for sending verification emails
+final com.mybible.util.EmailService emailService = com.mybible.util.EmailService.getInstance();
+
+// Try to load SMTP config from environment variables
+String smtpHost = System.getenv("SMTP_HOST");
+String smtpUsername = System.getenv("SMTP_USERNAME");
+String smtpPassword = System.getenv("SMTP_PASSWORD");
+String smtpFromAddress = System.getenv("SMTP_FROM_ADDRESS");
+String smtpFromName = System.getenv("SMTP_FROM_NAME");
+String smtpEnabled = System.getenv("SMTP_ENABLED");
+
+if (smtpUsername != null && !smtpUsername.isEmpty() &&
+    smtpPassword != null && !smtpPassword.isEmpty()) {
+    emailService.configure(
+        smtpHost != null ? smtpHost : "smtp.gmail.com",
+        587,
+        smtpUsername,
+        smtpPassword,
+        smtpFromAddress != null ? smtpFromAddress : smtpUsername,
+        smtpFromName != null ? smtpFromName : "MyBible",
+        "true".equalsIgnoreCase(smtpEnabled)
+    );
+    System.out.println("[EMAIL] Configured from environment variables");
+} else {
+    // Use hardcoded credentials (same as AllowanceAlley)
+    String configuredUsername = "Paul.esarks@gmail.com";
+    String configuredPassword = "tchhjwdbfdtbpwwu";  // Gmail App Password
+
+    if (!configuredUsername.isEmpty() && !configuredPassword.isEmpty()) {
+        emailService.configure(
+            "smtp.gmail.com",
+            587,
+            configuredUsername,
+            configuredPassword,
+            configuredUsername,
+            "MyBible",
+            true
+        );
+        System.out.println("[EMAIL] Configured with hardcoded credentials");
+    } else {
+        emailService.setEnabled(false);
+        System.out.println("[EMAIL] No SMTP credentials configured - running in MOCK mode");
+    }
+}
+System.out.println("[EMAIL] EmailService initialized (enabled=" + emailService.isEnabled() + ")");
+
+System.out.println("[SERVER] Creating Jetty server on port " + port);
+org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server(port);
+
+System.out.println("[SERVER] Creating servlet context handler");
+org.eclipse.jetty.ee10.servlet.ServletContextHandler context =
+    new org.eclipse.jetty.ee10.servlet.ServletContextHandler(
+        org.eclipse.jetty.ee10.servlet.ServletContextHandler.SESSIONS);
+context.setContextPath(contextPath);
+
+// ========================================================================
+// CORS FILTER
+// ========================================================================
+System.out.println("[SERVER] Adding CORS filter");
+jakarta.servlet.Filter corsFilter = new jakarta.servlet.Filter() {
+    @Override
+    public void init(jakarta.servlet.FilterConfig filterConfig) {
+        System.out.println("[CORS] CORS filter initialized");
+    }
+
+    @Override
+    public void doFilter(jakarta.servlet.ServletRequest servletRequest,
+                         jakarta.servlet.ServletResponse servletResponse,
+                         jakarta.servlet.FilterChain chain)
+            throws java.io.IOException, jakarta.servlet.ServletException {
+
+        jakarta.servlet.http.HttpServletRequest request =
+            (jakarta.servlet.http.HttpServletRequest) servletRequest;
+        jakarta.servlet.http.HttpServletResponse response =
+            (jakarta.servlet.http.HttpServletResponse) servletResponse;
+
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Max-Age", "3600");
+
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            response.setStatus(200);
+            return;
+        }
+
+        chain.doFilter(servletRequest, servletResponse);
+    }
+
+    @Override
+    public void destroy() {}
+};
+context.addFilter(new org.eclipse.jetty.ee10.servlet.FilterHolder(corsFilter), "/*",
+    java.util.EnumSet.of(jakarta.servlet.DispatcherType.REQUEST));
+
+// ========================================================================
+// REQUEST LOGGING FILTER
+// ========================================================================
+System.out.println("[SERVER] Adding request logging filter");
+jakarta.servlet.Filter loggingFilter = new jakarta.servlet.Filter() {
+    @Override
+    public void init(jakarta.servlet.FilterConfig filterConfig) {
+        System.out.println("[LOGGING] Request logging filter initialized");
+    }
+
+    @Override
+    public void doFilter(jakarta.servlet.ServletRequest servletRequest,
+                         jakarta.servlet.ServletResponse servletResponse,
+                         jakarta.servlet.FilterChain chain)
+            throws java.io.IOException, jakarta.servlet.ServletException {
+
+        jakarta.servlet.http.HttpServletRequest request =
+            (jakarta.servlet.http.HttpServletRequest) servletRequest;
+
+        long startTime = System.currentTimeMillis();
+        String method = request.getMethod();
+        String uri = request.getRequestURI();
+
+        System.out.println("[REQUEST] " + method + " " + uri);
+
+        chain.doFilter(servletRequest, servletResponse);
+
+        long duration = System.currentTimeMillis() - startTime;
+        System.out.println("[REQUEST] " + method + " " + uri + " completed in " + duration + "ms");
+    }
+
+    @Override
+    public void destroy() {}
+};
+context.addFilter(new org.eclipse.jetty.ee10.servlet.FilterHolder(loggingFilter), "/*",
+    java.util.EnumSet.of(jakarta.servlet.DispatcherType.REQUEST));
+
+// ========================================================================
+// HEALTH CHECK ENDPOINT - GET /health
+// ========================================================================
+System.out.println("[SERVER] Adding /health endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                            jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+            response.setStatus(200);
+            response.getWriter().write("{\"status\":\"healthy\",\"service\":\"mybible-api\",\"timestamp\":\"" +
+                new java.sql.Timestamp(System.currentTimeMillis()).toString() + "\"}");
+        }
+    }
+), "/health");
+
+// ========================================================================
+// HOME PAGE - GET /
+// ========================================================================
+System.out.println("[SERVER] Adding / (home) endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                            jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("text/html");
+            response.setStatus(200);
+            response.getWriter().write("<!DOCTYPE html>\n" +
+                "<html lang=\"en\">\n" +
+                "<head>\n" +
+                "    <meta charset=\"UTF-8\">\n" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+                "    <title>MyBible - Personal Bible Study</title>\n" +
+                "    <style>\n" +
+                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }\n" +
+                "        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n" +
+                "        h1 { color: #2c3e50; margin-bottom: 10px; }\n" +
+                "        .subtitle { color: #7f8c8d; margin-bottom: 30px; }\n" +
+                "        .btn { display: inline-block; padding: 12px 24px; margin: 10px 10px 10px 0; background: #3498db; color: white; text-decoration: none; border-radius: 4px; transition: background 0.3s; }\n" +
+                "        .btn:hover { background: #2980b9; }\n" +
+                "        .btn-secondary { background: #95a5a6; }\n" +
+                "        .btn-secondary:hover { background: #7f8c8d; }\n" +
+                "    </style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "    <div class=\"container\">\n" +
+                "        <h1>MyBible</h1>\n" +
+                "        <p class=\"subtitle\">Personal Bible Study Application</p>\n" +
+                "        <div>\n" +
+                "            <a href=\"/login\" class=\"btn\">Login</a>\n" +
+                "            <a href=\"/register\" class=\"btn btn-secondary\">Create Account</a>\n" +
+                "        </div>\n" +
+                "        <hr style=\"margin: 30px 0;\">\n" +
+                "        <h3>API Endpoints</h3>\n" +
+                "        <ul>\n" +
+                "            <li>GET /health - Health check</li>\n" +
+                "            <li>POST /api/auth/register - Create new account</li>\n" +
+                "            <li>POST /api/auth/login - Login</li>\n" +
+                "            <li>GET /api/auth/me - Get current user</li>\n" +
+                "            <li>GET /dashboard - User dashboard (requires login)</li>\n" +
+                "        </ul>\n" +
+                "    </div>\n" +
+                "</body>\n" +
+                "</html>");
+        }
+    }
+), "/");
+
+// ========================================================================
+// LOGIN PAGE - GET /login
+// ========================================================================
+System.out.println("[SERVER] Adding /login endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                            jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("text/html");
+            response.setStatus(200);
+            response.getWriter().write("<!DOCTYPE html>\n" +
+                "<html lang=\"en\">\n" +
+                "<head>\n" +
+                "    <meta charset=\"UTF-8\">\n" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+                "    <title>Login - MyBible</title>\n" +
+                "    <style>\n" +
+                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }\n" +
+                "        .container { max-width: 400px; margin: 50px auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n" +
+                "        h1 { color: #2c3e50; margin-bottom: 30px; text-align: center; }\n" +
+                "        .form-group { margin-bottom: 20px; }\n" +
+                "        label { display: block; margin-bottom: 5px; color: #34495e; }\n" +
+                "        input[type=\"email\"], input[type=\"password\"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }\n" +
+                "        .btn { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }\n" +
+                "        .btn:hover { background: #2980b9; }\n" +
+                "        .error { color: #e74c3c; margin-bottom: 15px; display: none; }\n" +
+                "        .links { text-align: center; margin-top: 20px; }\n" +
+                "        .links a { color: #3498db; }\n" +
+                "    </style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "    <div class=\"container\">\n" +
+                "        <h1>Login</h1>\n" +
+                "        <div id=\"error\" class=\"error\"></div>\n" +
+                "        <form id=\"loginForm\">\n" +
+                "            <div class=\"form-group\">\n" +
+                "                <label for=\"email\">Email</label>\n" +
+                "                <input type=\"email\" id=\"email\" name=\"email\" required>\n" +
+                "            </div>\n" +
+                "            <div class=\"form-group\">\n" +
+                "                <label for=\"password\">Password</label>\n" +
+                "                <input type=\"password\" id=\"password\" name=\"password\" required>\n" +
+                "            </div>\n" +
+                "            <button type=\"submit\" class=\"btn\">Login</button>\n" +
+                "        </form>\n" +
+                "        <div class=\"links\">\n" +
+                "            <p>Don't have an account? <a href=\"/register\">Register</a></p>\n" +
+                "            <p><a href=\"/\">Back to Home</a></p>\n" +
+                "        </div>\n" +
+                "    </div>\n" +
+                "    <script>\n" +
+                "        document.getElementById('loginForm').addEventListener('submit', async function(e) {\n" +
+                "            e.preventDefault();\n" +
+                "            const email = document.getElementById('email').value;\n" +
+                "            const password = document.getElementById('password').value;\n" +
+                "            const errorDiv = document.getElementById('error');\n" +
+                "            errorDiv.style.display = 'none';\n" +
+                "            try {\n" +
+                "                const response = await fetch('/api/auth/login', {\n" +
+                "                    method: 'POST',\n" +
+                "                    headers: { 'Content-Type': 'application/json' },\n" +
+                "                    body: JSON.stringify({ email, password })\n" +
+                "                });\n" +
+                "                const data = await response.json();\n" +
+                "                if (data.success) {\n" +
+                "                    localStorage.setItem('token', data.token);\n" +
+                "                    window.location.href = '/dashboard';\n" +
+                "                } else {\n" +
+                "                    errorDiv.textContent = data.error?.message || 'Login failed';\n" +
+                "                    errorDiv.style.display = 'block';\n" +
+                "                }\n" +
+                "            } catch (err) {\n" +
+                "                errorDiv.textContent = 'Network error. Please try again.';\n" +
+                "                errorDiv.style.display = 'block';\n" +
+                "            }\n" +
+                "        });\n" +
+                "    </script>\n" +
+                "</body>\n" +
+                "</html>");
+        }
+    }
+), "/login");
+
+// ========================================================================
+// REGISTER PAGE - GET /register
+// ========================================================================
+System.out.println("[SERVER] Adding /register endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                            jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("text/html");
+            response.setStatus(200);
+            response.getWriter().write("<!DOCTYPE html>\n" +
+                "<html lang=\"en\">\n" +
+                "<head>\n" +
+                "    <meta charset=\"UTF-8\">\n" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+                "    <title>Register - MyBible</title>\n" +
+                "    <style>\n" +
+                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }\n" +
+                "        .container { max-width: 400px; margin: 50px auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n" +
+                "        h1 { color: #2c3e50; margin-bottom: 30px; text-align: center; }\n" +
+                "        .form-group { margin-bottom: 20px; }\n" +
+                "        label { display: block; margin-bottom: 5px; color: #34495e; }\n" +
+                "        input[type=\"text\"], input[type=\"email\"], input[type=\"password\"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }\n" +
+                "        .btn { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }\n" +
+                "        .btn:hover { background: #229954; }\n" +
+                "        .error { color: #e74c3c; margin-bottom: 15px; display: none; }\n" +
+                "        .success { color: #27ae60; margin-bottom: 15px; display: none; }\n" +
+                "        .links { text-align: center; margin-top: 20px; }\n" +
+                "        .links a { color: #3498db; }\n" +
+                "    </style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "    <div class=\"container\">\n" +
+                "        <h1>Create Account</h1>\n" +
+                "        <div id=\"error\" class=\"error\"></div>\n" +
+                "        <div id=\"success\" class=\"success\"></div>\n" +
+                "        <form id=\"registerForm\">\n" +
+                "            <div class=\"form-group\">\n" +
+                "                <label for=\"name\">Name</label>\n" +
+                "                <input type=\"text\" id=\"name\" name=\"name\" required>\n" +
+                "            </div>\n" +
+                "            <div class=\"form-group\">\n" +
+                "                <label for=\"email\">Email</label>\n" +
+                "                <input type=\"email\" id=\"email\" name=\"email\" required>\n" +
+                "            </div>\n" +
+                "            <div class=\"form-group\">\n" +
+                "                <label for=\"password\">Password</label>\n" +
+                "                <input type=\"password\" id=\"password\" name=\"password\" required minlength=\"8\">\n" +
+                "            </div>\n" +
+                "            <div class=\"form-group\">\n" +
+                "                <label for=\"confirmPassword\">Confirm Password</label>\n" +
+                "                <input type=\"password\" id=\"confirmPassword\" name=\"confirmPassword\" required>\n" +
+                "            </div>\n" +
+                "            <button type=\"submit\" class=\"btn\">Create Account</button>\n" +
+                "        </form>\n" +
+                "        <div class=\"links\">\n" +
+                "            <p>Already have an account? <a href=\"/login\">Login</a></p>\n" +
+                "            <p><a href=\"/\">Back to Home</a></p>\n" +
+                "        </div>\n" +
+                "    </div>\n" +
+                "    <script>\n" +
+                "        document.getElementById('registerForm').addEventListener('submit', async function(e) {\n" +
+                "            e.preventDefault();\n" +
+                "            const name = document.getElementById('name').value;\n" +
+                "            const email = document.getElementById('email').value;\n" +
+                "            const password = document.getElementById('password').value;\n" +
+                "            const confirmPassword = document.getElementById('confirmPassword').value;\n" +
+                "            const errorDiv = document.getElementById('error');\n" +
+                "            const successDiv = document.getElementById('success');\n" +
+                "            errorDiv.style.display = 'none';\n" +
+                "            successDiv.style.display = 'none';\n" +
+                "            if (password !== confirmPassword) {\n" +
+                "                errorDiv.textContent = 'Passwords do not match';\n" +
+                "                errorDiv.style.display = 'block';\n" +
+                "                return;\n" +
+                "            }\n" +
+                "            try {\n" +
+                "                const response = await fetch('/api/auth/register', {\n" +
+                "                    method: 'POST',\n" +
+                "                    headers: { 'Content-Type': 'application/json' },\n" +
+                "                    body: JSON.stringify({ name, email, password })\n" +
+                "                });\n" +
+                "                const data = await response.json();\n" +
+                "                if (data.success) {\n" +
+                "                    successDiv.textContent = 'Account created! Check your email for verification code...';\n" +
+                "                    successDiv.style.display = 'block';\n" +
+                "                    setTimeout(() => window.location.href = '/verify-email?email=' + encodeURIComponent(email), 2000);\n" +
+                "                } else {\n" +
+                "                    errorDiv.textContent = data.error?.message || 'Registration failed';\n" +
+                "                    errorDiv.style.display = 'block';\n" +
+                "                }\n" +
+                "            } catch (err) {\n" +
+                "                errorDiv.textContent = 'Network error. Please try again.';\n" +
+                "                errorDiv.style.display = 'block';\n" +
+                "            }\n" +
+                "        });\n" +
+                "    </script>\n" +
+                "</body>\n" +
+                "</html>");
+        }
+    }
+), "/register");
+
+// ========================================================================
+// DASHBOARD PAGE - GET /dashboard
+// ========================================================================
+System.out.println("[SERVER] Adding /dashboard endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                            jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("text/html");
+            response.setStatus(200);
+            response.getWriter().write("<!DOCTYPE html>\n" +
+                "<html lang=\"en\">\n" +
+                "<head>\n" +
+                "    <meta charset=\"UTF-8\">\n" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+                "    <title>Dashboard - MyBible</title>\n" +
+                "    <style>\n" +
+                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }\n" +
+                "        .navbar { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }\n" +
+                "        .navbar h1 { margin: 0; font-size: 20px; }\n" +
+                "        .navbar a { color: white; text-decoration: none; margin-left: 20px; }\n" +
+                "        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }\n" +
+                "        .welcome { background: white; padding: 30px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n" +
+                "        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }\n" +
+                "        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n" +
+                "        .card h3 { color: #2c3e50; margin-top: 0; }\n" +
+                "        .btn { display: inline-block; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 4px; }\n" +
+                "        .btn:hover { background: #2980b9; }\n" +
+                "        .user-info { color: #7f8c8d; }\n" +
+                "    </style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "    <div class=\"navbar\">\n" +
+                "        <h1>MyBible</h1>\n" +
+                "        <div>\n" +
+                "            <span id=\"userEmail\" class=\"user-info\"></span>\n" +
+                "            <a href=\"#\" onclick=\"logout()\">Logout</a>\n" +
+                "        </div>\n" +
+                "    </div>\n" +
+                "    <div class=\"container\">\n" +
+                "        <div class=\"welcome\">\n" +
+                "            <h2>Welcome, <span id=\"userName\">User</span>!</h2>\n" +
+                "            <p>Your personal Bible study dashboard.</p>\n" +
+                "        </div>\n" +
+                "        <div class=\"cards\">\n" +
+                "            <div class=\"card\">\n" +
+                "                <h3>Read Bible</h3>\n" +
+                "                <p>Access 10 different Bible translations including KJV, ASV, NET, and more.</p>\n" +
+                "                <a href=\"#\" class=\"btn\">Start Reading</a>\n" +
+                "            </div>\n" +
+                "            <div class=\"card\">\n" +
+                "                <h3>My Notes</h3>\n" +
+                "                <p>Create and manage personal notes on Bible passages.</p>\n" +
+                "                <a href=\"#\" class=\"btn\">View Notes</a>\n" +
+                "            </div>\n" +
+                "            <div class=\"card\">\n" +
+                "                <h3>Bookmarks</h3>\n" +
+                "                <p>Quick access to your saved passages and favorite verses.</p>\n" +
+                "                <a href=\"#\" class=\"btn\">View Bookmarks</a>\n" +
+                "            </div>\n" +
+                "            <div class=\"card\">\n" +
+                "                <h3>Reading Plans</h3>\n" +
+                "                <p>Follow structured reading plans to study the Bible systematically.</p>\n" +
+                "                <a href=\"#\" class=\"btn\">View Plans</a>\n" +
+                "            </div>\n" +
+                "        </div>\n" +
+                "    </div>\n" +
+                "    <script>\n" +
+                "        const token = localStorage.getItem('token');\n" +
+                "        if (!token) {\n" +
+                "            window.location.href = '/login';\n" +
+                "        } else {\n" +
+                "            fetch('/api/auth/me', {\n" +
+                "                headers: { 'Authorization': 'Bearer ' + token }\n" +
+                "            })\n" +
+                "            .then(r => r.json())\n" +
+                "            .then(data => {\n" +
+                "                if (data.success) {\n" +
+                "                    document.getElementById('userName').textContent = data.user.name || 'User';\n" +
+                "                    document.getElementById('userEmail').textContent = data.user.email;\n" +
+                "                } else {\n" +
+                "                    localStorage.removeItem('token');\n" +
+                "                    window.location.href = '/login';\n" +
+                "                }\n" +
+                "            })\n" +
+                "            .catch(() => {\n" +
+                "                localStorage.removeItem('token');\n" +
+                "                window.location.href = '/login';\n" +
+                "            });\n" +
+                "        }\n" +
+                "        function logout() {\n" +
+                "            localStorage.removeItem('token');\n" +
+                "            window.location.href = '/login';\n" +
+                "        }\n" +
+                "    </script>\n" +
+                "</body>\n" +
+                "</html>");
+        }
+    }
+), "/dashboard");
+
+// ========================================================================
+// API: REGISTER - POST /api/auth/register
+// ========================================================================
+System.out.println("[SERVER] Adding /api/auth/register endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doPost(jakarta.servlet.http.HttpServletRequest request,
+                             jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            try {
+                // Read JSON body
+                java.io.BufferedReader reader = request.getReader();
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+                String body = sb.toString();
+
+                // Simple JSON parsing
+                String email = extractJsonString(body, "email");
+                String password = extractJsonString(body, "password");
+                String name = extractJsonString(body, "name");
+
+                // Validate required fields
+                if (email == null || email.isEmpty()) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"VALIDATION_ERROR\",\"message\":\"Email is required\"}}");
+                    return;
+                }
+                if (password == null || password.length() < 8) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"VALIDATION_ERROR\",\"message\":\"Password must be at least 8 characters\"}}");
+                    return;
+                }
+
+                // Check if email already exists
+                com.esarks.arm.model.jeo.ServiceJeo checkJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                checkJeo.getRequest().setWhereClause("EMAIL = '" + email.replace("'", "''").toLowerCase() + "'");
+                authUsersCrud.readAUTH_USERS(checkJeo);
+
+                if (checkJeo.getReply() != null && checkJeo.getReply().getJeoSize() > 0) {
+                    response.setStatus(409);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"EMAIL_EXISTS\",\"message\":\"An account with this email already exists\"}}");
+                    return;
+                }
+
+                // Generate verification code (6 digits)
+                String verificationCode = String.format("%06d", new java.util.Random().nextInt(1000000));
+                java.sql.Timestamp codeExpiresAt = new java.sql.Timestamp(System.currentTimeMillis() + (15 * 60 * 1000)); // 15 minutes
+
+                // Create new user
+                String userId = java.util.UUID.randomUUID().toString();
+                String passwordHash = com.mybible.util.HashUtil.hashPassword(password);
+                java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+
+                com.mybible.data.AUTH_USERS newUser = new com.mybible.data.AUTH_USERS();
+                newUser.setID(userId);
+                newUser.setEMAIL(email.toLowerCase());
+                newUser.setPASSWORD_HASH(passwordHash);
+                newUser.setNAME(name != null ? name : "");
+                newUser.setEMAIL_VERIFIED(false);
+                newUser.setVERIFICATION_CODE(verificationCode);
+                newUser.setVERIFICATION_CODE_EXPIRES_AT(codeExpiresAt);
+                newUser.setCREATED_AT(now);
+                newUser.setUPDATED_AT(now);
+
+                com.esarks.arm.model.jeo.ServiceJeo createJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                createJeo.getRequest().addJeo(newUser);
+                authUsersCrud.batchCreateAUTH_USERS(createJeo);
+
+                if (createJeo.getError() != null && createJeo.getError().getSeverity() < 5) {
+                    response.setStatus(500);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"CREATE_FAILED\",\"message\":\"Failed to create account\"}}");
+                    return;
+                }
+
+                // Send verification email
+                boolean emailSent = emailService.sendVerificationEmail(email.toLowerCase(), verificationCode);
+                System.out.println("[EMAIL] Verification email " + (emailSent ? "sent" : "FAILED") + " to " + email);
+
+                response.setStatus(201);
+                response.getWriter().write("{\"success\":true,\"message\":\"Account created. Please check your email for verification code.\",\"userId\":\"" + userId + "\",\"requiresVerification\":true,\"email\":\"" + email.toLowerCase() + "\"}");
+
+            } catch (Exception e) {
+                System.out.println("[ERROR] Registration failed: " + e.getMessage());
+                e.printStackTrace();
+                response.setStatus(500);
+                response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"SERVER_ERROR\",\"message\":\"" + e.getMessage().replace("\"", "'") + "\"}}");
+            }
+        }
+
+        private String extractJsonString(String json, String key) {
+            String pattern = "\"" + key + "\"\\s*:\\s*\"([^\"]*)\"";
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+            java.util.regex.Matcher m = p.matcher(json);
+            if (m.find()) {
+                return m.group(1);
+            }
+            return null;
+        }
+    }
+), "/api/auth/register");
+
+// ========================================================================
+// API: LOGIN - POST /api/auth/login
+// ========================================================================
+System.out.println("[SERVER] Adding /api/auth/login endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doPost(jakarta.servlet.http.HttpServletRequest request,
+                             jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            try {
+                // Read JSON body
+                java.io.BufferedReader reader = request.getReader();
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+                String body = sb.toString();
+
+                // Simple JSON parsing
+                String email = extractJsonString(body, "email");
+                String password = extractJsonString(body, "password");
+
+                // Validate required fields
+                if (email == null || email.isEmpty() || password == null || password.isEmpty()) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"VALIDATION_ERROR\",\"message\":\"Email and password are required\"}}");
+                    return;
+                }
+
+                // Find user by email
+                com.esarks.arm.model.jeo.ServiceJeo findJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                findJeo.getRequest().setWhereClause("EMAIL = '" + email.replace("'", "''").toLowerCase() + "'");
+                authUsersCrud.readAUTH_USERS(findJeo);
+
+                if (findJeo.getReply() == null || findJeo.getReply().getJeoSize() == 0) {
+                    response.setStatus(401);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"INVALID_CREDENTIALS\",\"message\":\"Invalid email or password\"}}");
+                    return;
+                }
+
+                com.esarks.jac.Jeo jeo = findJeo.getReply().getJeoAt(0);
+                if (!(jeo instanceof com.mybible.data.AUTH_USERS)) {
+                    response.setStatus(500);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"SERVER_ERROR\",\"message\":\"Unexpected data type\"}}");
+                    return;
+                }
+                com.mybible.data.AUTH_USERS user = (com.mybible.data.AUTH_USERS) jeo;
+                String storedHash = user.getPASSWORD_HASH("");
+
+                // Verify password
+                if (!com.mybible.util.HashUtil.verifyPassword(password, storedHash)) {
+                    response.setStatus(401);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"INVALID_CREDENTIALS\",\"message\":\"Invalid email or password\"}}");
+                    return;
+                }
+
+                // Check email verified
+                if (!user.getEMAIL_VERIFIED(false)) {
+                    response.setStatus(403);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"EMAIL_NOT_VERIFIED\",\"message\":\"Please verify your email before logging in\"},\"email\":\"" + email.toLowerCase() + "\"}");
+                    return;
+                }
+
+                // Update last login
+                java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+                user.setLAST_LOGIN(now);
+                user.setUPDATED_AT(now);
+
+                com.esarks.arm.model.jeo.ServiceJeo updateJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                updateJeo.getRequest().addJeo(user);
+                authUsersCrud.uidUpdateAUTH_USERS(updateJeo);
+
+                // Generate JWT token
+                String userId = user.getID("");
+                String userEmail = user.getEMAIL("");
+                String token = com.mybible.util.JWTUtil.generate(userId, userEmail, "user");
+
+                String userName = user.getNAME("");
+                response.setStatus(200);
+                response.getWriter().write("{\"success\":true,\"token\":\"" + token + "\",\"user\":{\"id\":\"" + userId + "\",\"email\":\"" + userEmail + "\",\"name\":\"" + userName.replace("\"", "'") + "\"}}");
+
+            } catch (Exception e) {
+                System.out.println("[ERROR] Login failed: " + e.getMessage());
+                e.printStackTrace();
+                response.setStatus(500);
+                response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"SERVER_ERROR\",\"message\":\"" + e.getMessage().replace("\"", "'") + "\"}}");
+            }
+        }
+
+        private String extractJsonString(String json, String key) {
+            String pattern = "\"" + key + "\"\\s*:\\s*\"([^\"]*)\"";
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+            java.util.regex.Matcher m = p.matcher(json);
+            if (m.find()) {
+                return m.group(1);
+            }
+            return null;
+        }
+    }
+), "/api/auth/login");
+
+// ========================================================================
+// API: GET CURRENT USER - GET /api/auth/me
+// ========================================================================
+System.out.println("[SERVER] Adding /api/auth/me endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                            jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            try {
+                com.mybible.util.RequestContext ctx = com.mybible.util.RequestContext.fromRequest(request);
+
+                if (!ctx.isAuthenticated()) {
+                    response.setStatus(401);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"UNAUTHORIZED\",\"message\":\"Authentication required\"}}");
+                    return;
+                }
+
+                // Fetch full user details
+                com.esarks.arm.model.jeo.ServiceJeo findJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                findJeo.getRequest().setWhereClause("ID = '" + ctx.getUserId().replace("'", "''") + "'");
+                authUsersCrud.readAUTH_USERS(findJeo);
+
+                if (findJeo.getReply() == null || findJeo.getReply().getJeoSize() == 0) {
+                    response.setStatus(404);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"USER_NOT_FOUND\",\"message\":\"User not found\"}}");
+                    return;
+                }
+
+                com.esarks.jac.Jeo jeo = findJeo.getReply().getJeoAt(0);
+                if (!(jeo instanceof com.mybible.data.AUTH_USERS)) {
+                    response.setStatus(500);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"SERVER_ERROR\",\"message\":\"Unexpected data type\"}}");
+                    return;
+                }
+                com.mybible.data.AUTH_USERS user = (com.mybible.data.AUTH_USERS) jeo;
+
+                response.setStatus(200);
+                response.getWriter().write("{\"success\":true,\"user\":{\"id\":\"" + user.getID("") +
+                    "\",\"email\":\"" + user.getEMAIL("") +
+                    "\",\"name\":\"" + user.getNAME("").replace("\"", "'") +
+                    "\",\"emailVerified\":" + user.getEMAIL_VERIFIED() + "}}");
+
+            } catch (Exception e) {
+                System.out.println("[ERROR] Get user failed: " + e.getMessage());
+                e.printStackTrace();
+                response.setStatus(500);
+                response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"SERVER_ERROR\",\"message\":\"" + e.getMessage().replace("\"", "'") + "\"}}");
+            }
+        }
+    }
+), "/api/auth/me");
+
+// ========================================================================
+// API: VERIFY EMAIL - POST /api/auth/verify-email
+// ========================================================================
+System.out.println("[SERVER] Adding /api/auth/verify-email endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doPost(jakarta.servlet.http.HttpServletRequest request,
+                             jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            try {
+                // Read JSON body
+                java.io.BufferedReader reader = request.getReader();
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+                String body = sb.toString();
+
+                String email = extractJsonString(body, "email");
+                String code = extractJsonString(body, "code");
+
+                if (email == null || email.isEmpty() || code == null || code.isEmpty()) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"VALIDATION_ERROR\",\"message\":\"Email and verification code are required\"}}");
+                    return;
+                }
+
+                // Find user by email
+                com.esarks.arm.model.jeo.ServiceJeo findJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                findJeo.getRequest().setWhereClause("EMAIL = '" + email.replace("'", "''").toLowerCase() + "'");
+                authUsersCrud.readAUTH_USERS(findJeo);
+
+                if (findJeo.getReply() == null || findJeo.getReply().getJeoSize() == 0) {
+                    response.setStatus(404);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"USER_NOT_FOUND\",\"message\":\"No account found with this email\"}}");
+                    return;
+                }
+
+                com.esarks.jac.Jeo jeo = findJeo.getReply().getJeoAt(0);
+                com.mybible.data.AUTH_USERS user = (com.mybible.data.AUTH_USERS) jeo;
+
+                // Check if already verified
+                if (user.getEMAIL_VERIFIED(false)) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"ALREADY_VERIFIED\",\"message\":\"Email is already verified\"}}");
+                    return;
+                }
+
+                // Check verification code
+                String storedCode = user.getVERIFICATION_CODE();
+                java.sql.Timestamp expiresAt = user.getVERIFICATION_CODE_EXPIRES_AT();
+                java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+
+                if (storedCode == null || storedCode.isEmpty()) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"NO_CODE\",\"message\":\"No verification code found. Please request a new one.\"}}");
+                    return;
+                }
+
+                if (expiresAt != null && now.after(expiresAt)) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"CODE_EXPIRED\",\"message\":\"Verification code has expired. Please request a new one.\"}}");
+                    return;
+                }
+
+                if (!code.equals(storedCode)) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"INVALID_CODE\",\"message\":\"Invalid verification code\"}}");
+                    return;
+                }
+
+                // Mark as verified
+                user.setEMAIL_VERIFIED(true);
+                user.setVERIFICATION_CODE("");
+                user.setVERIFICATION_CODE_EXPIRES_AT(now);
+                user.setUPDATED_AT(now);
+
+                com.esarks.arm.model.jeo.ServiceJeo updateJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                updateJeo.getRequest().addJeo(user);
+                authUsersCrud.uidUpdateAUTH_USERS(updateJeo);
+
+                System.out.println("[VERIFY] Email verified for: " + email);
+
+                response.setStatus(200);
+                response.getWriter().write("{\"success\":true,\"message\":\"Email verified successfully\"}");
+
+            } catch (Exception e) {
+                System.out.println("[ERROR] Verification failed: " + e.getMessage());
+                e.printStackTrace();
+                response.setStatus(500);
+                response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"SERVER_ERROR\",\"message\":\"" + e.getMessage().replace("\"", "'") + "\"}}");
+            }
+        }
+
+        private String extractJsonString(String json, String key) {
+            String pattern = "\"" + key + "\"\\s*:\\s*\"([^\"]*)\"";
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+            java.util.regex.Matcher m = p.matcher(json);
+            if (m.find()) {
+                return m.group(1);
+            }
+            return null;
+        }
+    }
+), "/api/auth/verify-email");
+
+// ========================================================================
+// API: RESEND VERIFICATION - POST /api/auth/resend-verification
+// ========================================================================
+System.out.println("[SERVER] Adding /api/auth/resend-verification endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doPost(jakarta.servlet.http.HttpServletRequest request,
+                             jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            try {
+                java.io.BufferedReader reader = request.getReader();
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+                String body = sb.toString();
+
+                String email = extractJsonString(body, "email");
+
+                if (email == null || email.isEmpty()) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"VALIDATION_ERROR\",\"message\":\"Email is required\"}}");
+                    return;
+                }
+
+                // Find user by email
+                com.esarks.arm.model.jeo.ServiceJeo findJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                findJeo.getRequest().setWhereClause("EMAIL = '" + email.replace("'", "''").toLowerCase() + "'");
+                authUsersCrud.readAUTH_USERS(findJeo);
+
+                if (findJeo.getReply() == null || findJeo.getReply().getJeoSize() == 0) {
+                    response.setStatus(404);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"USER_NOT_FOUND\",\"message\":\"No account found with this email\"}}");
+                    return;
+                }
+
+                com.esarks.jac.Jeo jeo = findJeo.getReply().getJeoAt(0);
+                com.mybible.data.AUTH_USERS user = (com.mybible.data.AUTH_USERS) jeo;
+
+                if (user.getEMAIL_VERIFIED(false)) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"ALREADY_VERIFIED\",\"message\":\"Email is already verified\"}}");
+                    return;
+                }
+
+                // Generate new verification code
+                String newCode = String.format("%06d", new java.util.Random().nextInt(1000000));
+                java.sql.Timestamp newExpiresAt = new java.sql.Timestamp(System.currentTimeMillis() + (15 * 60 * 1000));
+                java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+
+                user.setVERIFICATION_CODE(newCode);
+                user.setVERIFICATION_CODE_EXPIRES_AT(newExpiresAt);
+                user.setUPDATED_AT(now);
+
+                com.esarks.arm.model.jeo.ServiceJeo updateJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                updateJeo.getRequest().addJeo(user);
+                authUsersCrud.uidUpdateAUTH_USERS(updateJeo);
+
+                // Send new verification email
+                boolean emailSent = emailService.sendVerificationEmail(email.toLowerCase(), newCode);
+                System.out.println("[EMAIL] New verification email " + (emailSent ? "sent" : "FAILED") + " to " + email);
+
+                response.setStatus(200);
+                response.getWriter().write("{\"success\":true,\"message\":\"Verification code sent to your email\"}");
+
+            } catch (Exception e) {
+                System.out.println("[ERROR] Resend verification failed: " + e.getMessage());
+                e.printStackTrace();
+                response.setStatus(500);
+                response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"SERVER_ERROR\",\"message\":\"" + e.getMessage().replace("\"", "'") + "\"}}");
+            }
+        }
+
+        private String extractJsonString(String json, String key) {
+            String pattern = "\"" + key + "\"\\s*:\\s*\"([^\"]*)\"";
+            java.util.regex.Pattern p = java.util.regex.Pattern.compile(pattern);
+            java.util.regex.Matcher m = p.matcher(json);
+            if (m.find()) {
+                return m.group(1);
+            }
+            return null;
+        }
+    }
+), "/api/auth/resend-verification");
+
+// ========================================================================
+// API: DELETE ACCOUNT - DELETE /api/auth/account
+// ========================================================================
+System.out.println("[SERVER] Adding /api/auth/account (DELETE) endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doDelete(jakarta.servlet.http.HttpServletRequest request,
+                               jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            try {
+                com.mybible.util.RequestContext ctx = com.mybible.util.RequestContext.fromRequest(request);
+
+                if (!ctx.isAuthenticated()) {
+                    response.setStatus(401);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"UNAUTHORIZED\",\"message\":\"Authentication required\"}}");
+                    return;
+                }
+
+                String userId = ctx.getUserId();
+
+                // Find user
+                com.esarks.arm.model.jeo.ServiceJeo findJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                findJeo.getRequest().setWhereClause("ID = '" + userId.replace("'", "''") + "'");
+                authUsersCrud.readAUTH_USERS(findJeo);
+
+                if (findJeo.getReply() == null || findJeo.getReply().getJeoSize() == 0) {
+                    response.setStatus(404);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"USER_NOT_FOUND\",\"message\":\"User not found\"}}");
+                    return;
+                }
+
+                com.esarks.jac.Jeo jeo = findJeo.getReply().getJeoAt(0);
+                com.mybible.data.AUTH_USERS user = (com.mybible.data.AUTH_USERS) jeo;
+
+                // Delete user
+                com.esarks.arm.model.jeo.ServiceJeo deleteJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                deleteJeo.getRequest().addJeo(user);
+                authUsersCrud.deleteAUTH_USERS(deleteJeo);
+
+                System.out.println("[DELETE] Account deleted: " + userId);
+
+                response.setStatus(200);
+                response.getWriter().write("{\"success\":true,\"message\":\"Account deleted successfully\"}");
+
+            } catch (Exception e) {
+                System.out.println("[ERROR] Delete account failed: " + e.getMessage());
+                e.printStackTrace();
+                response.setStatus(500);
+                response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"SERVER_ERROR\",\"message\":\"" + e.getMessage().replace("\"", "'") + "\"}}");
+            }
+        }
+    }
+), "/api/auth/account");
+
+// ========================================================================
+// SETTINGS PAGE - GET /settings
+// ========================================================================
+System.out.println("[SERVER] Adding /settings endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                            jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("text/html");
+            response.setStatus(200);
+            response.getWriter().write("<!DOCTYPE html>\n" +
+                "<html lang=\"en\">\n" +
+                "<head>\n" +
+                "    <meta charset=\"UTF-8\">\n" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+                "    <title>Settings - MyBible</title>\n" +
+                "    <style>\n" +
+                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }\n" +
+                "        .container { max-width: 600px; margin: 0 auto; }\n" +
+                "        h1 { color: #2c3e50; }\n" +
+                "        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n" +
+                "        .danger-zone { border: 2px solid #e74c3c; }\n" +
+                "        .danger-zone h3 { color: #e74c3c; margin-top: 0; }\n" +
+                "        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }\n" +
+                "        .btn-danger { background: #e74c3c; color: white; }\n" +
+                "        .btn-danger:hover { background: #c0392b; }\n" +
+                "        .btn-secondary { background: #95a5a6; color: white; }\n" +
+                "        nav { margin-bottom: 20px; }\n" +
+                "        nav a { color: #3498db; margin-right: 15px; }\n" +
+                "        #message { padding: 10px; margin-bottom: 10px; border-radius: 4px; display: none; }\n" +
+                "        .success { background: #d4edda; color: #155724; }\n" +
+                "        .error { background: #f8d7da; color: #721c24; }\n" +
+                "    </style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "    <div class=\"container\">\n" +
+                "        <nav><a href=\"/dashboard\">← Back to Dashboard</a></nav>\n" +
+                "        <h1>Settings</h1>\n" +
+                "        <div id=\"message\"></div>\n" +
+                "        <div class=\"card\">\n" +
+                "            <h3>Account Information</h3>\n" +
+                "            <p><strong>Email:</strong> <span id=\"userEmail\">Loading...</span></p>\n" +
+                "            <p><strong>Name:</strong> <span id=\"userName\">Loading...</span></p>\n" +
+                "            <p><strong>Email Verified:</strong> <span id=\"emailVerified\">Loading...</span></p>\n" +
+                "        </div>\n" +
+                "        <div class=\"card danger-zone\">\n" +
+                "            <h3>Danger Zone</h3>\n" +
+                "            <p>Permanently delete your account and all associated data. This action cannot be undone.</p>\n" +
+                "            <button id=\"deleteBtn\" class=\"btn btn-danger\" onclick=\"confirmDelete()\">Delete My Account</button>\n" +
+                "        </div>\n" +
+                "    </div>\n" +
+                "    <script>\n" +
+                "        const token = localStorage.getItem('token');\n" +
+                "        if (!token) { window.location.href = '/login'; }\n" +
+                "        \n" +
+                "        fetch('/api/auth/me', {\n" +
+                "            headers: { 'Authorization': 'Bearer ' + token }\n" +
+                "        })\n" +
+                "        .then(r => r.json())\n" +
+                "        .then(data => {\n" +
+                "            if (data.success) {\n" +
+                "                document.getElementById('userEmail').textContent = data.user.email;\n" +
+                "                document.getElementById('userName').textContent = data.user.name || '(not set)';\n" +
+                "                document.getElementById('emailVerified').textContent = data.user.emailVerified ? 'Yes' : 'No';\n" +
+                "            } else {\n" +
+                "                window.location.href = '/login';\n" +
+                "            }\n" +
+                "        });\n" +
+                "        \n" +
+                "        function confirmDelete() {\n" +
+                "            if (confirm('Are you sure you want to delete your account? This cannot be undone!')) {\n" +
+                "                if (confirm('This will permanently delete all your data. Are you REALLY sure?')) {\n" +
+                "                    fetch('/api/auth/account', {\n" +
+                "                        method: 'DELETE',\n" +
+                "                        headers: { 'Authorization': 'Bearer ' + token }\n" +
+                "                    })\n" +
+                "                    .then(r => r.json())\n" +
+                "                    .then(data => {\n" +
+                "                        if (data.success) {\n" +
+                "                            localStorage.removeItem('token');\n" +
+                "                            alert('Account deleted. Goodbye!');\n" +
+                "                            window.location.href = '/';\n" +
+                "                        } else {\n" +
+                "                            showMessage(data.error.message, 'error');\n" +
+                "                        }\n" +
+                "                    });\n" +
+                "                }\n" +
+                "            }\n" +
+                "        }\n" +
+                "        \n" +
+                "        function showMessage(msg, type) {\n" +
+                "            const el = document.getElementById('message');\n" +
+                "            el.textContent = msg;\n" +
+                "            el.className = type;\n" +
+                "            el.style.display = 'block';\n" +
+                "        }\n" +
+                "    </script>\n" +
+                "</body>\n" +
+                "</html>");
+        }
+    }
+), "/settings");
+
+// ========================================================================
+// VERIFY EMAIL PAGE - GET /verify-email
+// ========================================================================
+System.out.println("[SERVER] Adding /verify-email endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                            jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("text/html");
+            String email = request.getParameter("email");
+            response.setStatus(200);
+            response.getWriter().write("<!DOCTYPE html>\n" +
+                "<html lang=\"en\">\n" +
+                "<head>\n" +
+                "    <meta charset=\"UTF-8\">\n" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
+                "    <title>Verify Email - MyBible</title>\n" +
+                "    <style>\n" +
+                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }\n" +
+                "        .container { max-width: 400px; margin: 50px auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n" +
+                "        h1 { color: #2c3e50; text-align: center; }\n" +
+                "        .form-group { margin-bottom: 20px; }\n" +
+                "        label { display: block; margin-bottom: 5px; color: #34495e; }\n" +
+                "        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; font-size: 18px; text-align: center; letter-spacing: 8px; }\n" +
+                "        .btn { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }\n" +
+                "        .btn:hover { background: #2980b9; }\n" +
+                "        .btn-link { background: none; color: #3498db; padding: 10px; }\n" +
+                "        .error { color: #e74c3c; margin-bottom: 15px; display: none; }\n" +
+                "        .success { color: #27ae60; margin-bottom: 15px; display: none; }\n" +
+                "        .info { color: #7f8c8d; font-size: 14px; text-align: center; margin-bottom: 20px; }\n" +
+                "    </style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "    <div class=\"container\">\n" +
+                "        <h1>Verify Your Email</h1>\n" +
+                "        <p class=\"info\">Enter the 6-digit code sent to your email</p>\n" +
+                "        <div id=\"error\" class=\"error\"></div>\n" +
+                "        <div id=\"success\" class=\"success\"></div>\n" +
+                "        <form id=\"verifyForm\">\n" +
+                "            <div class=\"form-group\">\n" +
+                "                <label for=\"email\">Email</label>\n" +
+                "                <input type=\"email\" id=\"email\" value=\"" + (email != null ? email : "") + "\" required style=\"letter-spacing: normal; text-align: left;\">\n" +
+                "            </div>\n" +
+                "            <div class=\"form-group\">\n" +
+                "                <label for=\"code\">Verification Code</label>\n" +
+                "                <input type=\"text\" id=\"code\" maxlength=\"6\" pattern=\"[0-9]{6}\" required placeholder=\"000000\">\n" +
+                "            </div>\n" +
+                "            <button type=\"submit\" class=\"btn\">Verify Email</button>\n" +
+                "        </form>\n" +
+                "        <button class=\"btn btn-link\" onclick=\"resendCode()\">Resend Code</button>\n" +
+                "    </div>\n" +
+                "    <script>\n" +
+                "        document.getElementById('verifyForm').addEventListener('submit', async function(e) {\n" +
+                "            e.preventDefault();\n" +
+                "            const email = document.getElementById('email').value;\n" +
+                "            const code = document.getElementById('code').value;\n" +
+                "            const errorDiv = document.getElementById('error');\n" +
+                "            const successDiv = document.getElementById('success');\n" +
+                "            errorDiv.style.display = 'none';\n" +
+                "            successDiv.style.display = 'none';\n" +
+                "            try {\n" +
+                "                const response = await fetch('/api/auth/verify-email', {\n" +
+                "                    method: 'POST',\n" +
+                "                    headers: { 'Content-Type': 'application/json' },\n" +
+                "                    body: JSON.stringify({ email, code })\n" +
+                "                });\n" +
+                "                const data = await response.json();\n" +
+                "                if (data.success) {\n" +
+                "                    successDiv.textContent = 'Email verified! Redirecting to login...';\n" +
+                "                    successDiv.style.display = 'block';\n" +
+                "                    setTimeout(() => window.location.href = '/login', 2000);\n" +
+                "                } else {\n" +
+                "                    errorDiv.textContent = data.error.message;\n" +
+                "                    errorDiv.style.display = 'block';\n" +
+                "                }\n" +
+                "            } catch (err) {\n" +
+                "                errorDiv.textContent = 'Connection error';\n" +
+                "                errorDiv.style.display = 'block';\n" +
+                "            }\n" +
+                "        });\n" +
+                "        \n" +
+                "        async function resendCode() {\n" +
+                "            const email = document.getElementById('email').value;\n" +
+                "            if (!email) { alert('Please enter your email'); return; }\n" +
+                "            const response = await fetch('/api/auth/resend-verification', {\n" +
+                "                method: 'POST',\n" +
+                "                headers: { 'Content-Type': 'application/json' },\n" +
+                "                body: JSON.stringify({ email })\n" +
+                "            });\n" +
+                "            const data = await response.json();\n" +
+                "            alert(data.success ? 'New code sent!' : data.error.message);\n" +
+                "        }\n" +
+                "    </script>\n" +
+                "</body>\n" +
+                "</html>");
+        }
+    }
+), "/verify-email");
+
+// ========================================================================
+// START SERVER
+// ========================================================================
+server.setHandler(context);
+
+try {
+    System.out.println("[SERVER] Starting Jetty server...");
+    server.start();
+    System.out.println("[SERVER] MyBible server started on http://localhost:" + port);
+    System.out.println("[SERVER] Press Ctrl+C to stop");
+    server.join();
+} catch (Exception e) {
+    System.out.println("[SERVER] Error starting server: " + e.getMessage());
+    e.printStackTrace();
+}
+
+}

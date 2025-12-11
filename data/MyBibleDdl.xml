@@ -1,0 +1,24 @@
+<com.esarks.arm.schemas.ddl.root>
+
+  <!-- ===============================================
+       AUTH_USERS Table
+       Stores user authentication credentials
+       =============================================== -->
+  <table name="AUTH_USERS">
+    <field name="ID" type="string" size="36" nullable="false"/>
+    <field name="EMAIL" type="string" size="255" nullable="false"/>
+    <field name="PASSWORD_HASH" type="string" size="255" nullable="false"/>
+    <field name="NAME" type="string" size="255" nullable="true"/>
+    <field name="EMAIL_VERIFIED" type="boolean" nullable="false"/>
+    <field name="VERIFICATION_CODE" type="string" size="6" nullable="true"/>
+    <field name="VERIFICATION_CODE_EXPIRES_AT" type="timestamp" nullable="true"/>
+    <field name="CREATED_AT" type="timestamp" nullable="false"/>
+    <field name="UPDATED_AT" type="timestamp" nullable="false"/>
+    <field name="LAST_LOGIN" type="timestamp" nullable="true"/>
+
+    <primary name="AUTH_USERS_pk">
+      <field>ID</field>
+    </primary>
+  </table>
+
+</com.esarks.arm.schemas.ddl.root>

@@ -1,0 +1,1727 @@
+
+//$Section=License$Preserve=no
+//  Generated at 2025.12.10 08:39:49.050 PM EST by Architect's Companion (c) 2003, Architects of Software Design, Corp., ALL RIGHTS RESERVED
+
+//$Section=ChangeLog$Preserve=yes
+
+/* ========================================================================= *
+   Contributor        Description
+   ------------------ ------------------------------------------------------
+                      Author
+
+ * ========================================================================= */
+
+//$Section=ChangeLog$Preserve=no
+
+//----------------------------------------------------------------------------
+// This section is for custom operations.
+//----------------------------------------------------------------------------
+//$Section=CustomOperations$Preserve=yes
+//$Section=CustomOperations$Preserve=no
+    public void batchCreateAUTH_USERS(com.esarks.arm.model.jeo.ServiceJeo aJeo) {
+      java.util.Date lStartTime = null;
+      if (iMicLog.test(Log._APP)) {
+        lStartTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERS" + "!Enter method");
+      }
+      DbConnectionFactory lDbConnectionFactory = DbConnectionFactory.getInstance();
+      DbConnection lDbConnection = null;
+
+      PropertyValue lDbConnectionPropertyValue = aJeo.getPropertyValue("DbConnection");
+      if (lDbConnectionPropertyValue.getValueType() != PropertyValue.CONST_VALUE_TYPE_NULL) {
+        lDbConnection = (DbConnection) lDbConnectionPropertyValue.getValueObject();
+      } else {
+        lDbConnection = lDbConnectionFactory.getDbConnection("application");
+      }
+
+      if (lDbConnection == null) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : batchCreateAUTH_USERS");
+        aJeo.setErrorTitle("Database Connection Failed");
+        aJeo.setErrorText("The service failed to obtain a database connection.");
+        aJeo.setErrorResolution("This is an internal application error that will likely be unresolvable without technical support intervention.");
+        aJeo.setErrorSeverity(0);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERS" + "!DbConnection is null");
+        }
+        return;
+      }
+
+      
+      try {
+        String lTop = "";
+        String lWhere = "";
+        ArrayList lWhereList = new ArrayList();
+        String lOrder = "";
+        if (!aJeo.getRequest().getOrderClausePropertyValue().toString().equals("")) {
+          lOrder = aJeo.getRequest().getOrderClausePropertyValue().toString();
+        }
+        String lSql = "INSERT INTO $AUTH_USERS (ID,EMAIL,PASSWORD_HASH,NAME,EMAIL_VERIFIED,VERIFICATION_CODE,VERIFICATION_CODE_EXPIRES_AT,CREATED_AT,UPDATED_AT,LAST_LOGIN) VALUES (?,?,?,?,?,?,?,?,?,?) ";
+        if (!aJeo.getRequest().getSelectClausePropertyValue().toString().equals("")) {
+          lSql = aJeo.getRequest().getSelectClausePropertyValue().toString();
+        }
+        if (!aJeo.getRequest().getWhereClausePropertyValue().toString().equals("")) {
+          lWhere = aJeo.getRequest().getWhereClausePropertyValue().toString();
+        }
+        if (lWhere.trim().length() > 0) lWhere = lWhere.trim();
+        if (lOrder.trim().length() > 0) lOrder = lOrder.trim();
+
+        int lTagSearchIndex = 0;
+        if ((lTagSearchIndex = lSql.indexOf("$*top")) > -1) {
+          if (lDbConnection.getStereotype().equals("sqlServer")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "TOP " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 5);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*limit")) > -1) {
+          if (lDbConnection.getStereotype().equals("mySql") || lDbConnection.getStereotype().equals("postgreSql")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "LIMIT " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 7);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*where")) > -1) {
+          lWhere = lWhere.trim();
+          if (lWhere.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "WHERE " + lWhere + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*order")) > -1) {
+          lOrder = lOrder.trim();
+          if (lOrder.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "ORDER BY " + lOrder + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$*")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          String lTag = lSql.substring(lTagSearchIndex+2, lSize);
+          lSql = lSql.substring(0, lTagSearchIndex) + aJeo.getRequest().getPropertyValue(lTag).toString() + lSql.substring(lSize);
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          int lSize2 = lSql.substring(lTagSearchIndex).indexOf(".");
+          if (lSize2 > -1 && lSize2 < lSize) lSize = lSize2;
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          lSql = lSql.substring(0, lTagSearchIndex) + 
+                   getObjectPrefix(lSql.substring(lTagSearchIndex+1, lSize).toLowerCase()) + lSql.substring(lTagSearchIndex+1, lSize) +
+                   lSql.substring(lSize);
+        }
+        if (iMicLog.test(Log._APP)) {
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERS" + "!PreparedStatement=" + lSql.trim());
+        }
+        PreparedStatement lStatement = lDbConnection.getConnection().prepareStatement(lSql.trim());
+        if (aJeo.getRequest().getValueList() != null) {
+          ArrayList lValueList = aJeo.getRequest().getValueList();
+          for (int lValueListIdx=0; lValueListIdx < lValueList.size(); lValueListIdx++) {
+            lStatement.setString(lValueListIdx+1, (String) lValueList.get(lValueListIdx));
+          }
+        } else {
+          for (int lIdx=0; lIdx < lWhereList.size(); lIdx++) {
+            lStatement.setString(lIdx+1, ((PropertyValue) lWhereList.get(lIdx)).toString());
+          }
+        }
+        {
+          com.esarks.arm.model.jeo.ServiceJeo lJeox = aJeo;
+          com.esarks.arm.model.jeo.RequestJeo lJeoxx = (com.esarks.arm.model.jeo.RequestJeo) lJeox.getJeoByInstanceNameAt("com.esarks.arm.model.jeo.RequestJeo", 0);
+          ArrayList arrayList_lJeoxxx = lJeoxx.getJeoByInstanceName("com.mybible.data.AUTH_USERS");
+          for (int idx_lJeoxxx=0; idx_lJeoxxx < arrayList_lJeoxxx.size(); idx_lJeoxxx++) {
+          com.mybible.data.AUTH_USERS lJeoxxx = (com.mybible.data.AUTH_USERS) arrayList_lJeoxxx.get(idx_lJeoxxx);
+          if(lJeoxxx.isIDNull()) {
+            lStatement.setNull(1, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(1, lJeoxxx.getIDPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isEMAILNull()) {
+            lStatement.setNull(2, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(2, lJeoxxx.getEMAILPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isPASSWORD_HASHNull()) {
+            lStatement.setNull(3, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(3, lJeoxxx.getPASSWORD_HASHPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isNAMENull()) {
+            lStatement.setNull(4, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(4, lJeoxxx.getNAMEPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isEMAIL_VERIFIEDNull()) {
+            lStatement.setNull(5, java.sql.Types.BOOLEAN);
+          } else {
+            lStatement.setBoolean(5, lJeoxxx.getEMAIL_VERIFIEDPropertyValue().getValueBoolean());
+          }
+          if(lJeoxxx.isVERIFICATION_CODENull()) {
+            lStatement.setNull(6, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(6, lJeoxxx.getVERIFICATION_CODEPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isVERIFICATION_CODE_EXPIRES_ATNull()) {
+            lStatement.setNull(7, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(7, lJeoxxx.getVERIFICATION_CODE_EXPIRES_ATPropertyValue().getValueTimestamp());
+          }
+          if(lJeoxxx.isCREATED_ATNull()) {
+            lStatement.setNull(8, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(8, lJeoxxx.getCREATED_ATPropertyValue().getValueTimestamp());
+          }
+          if(lJeoxxx.isUPDATED_ATNull()) {
+            lStatement.setNull(9, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(9, lJeoxxx.getUPDATED_ATPropertyValue().getValueTimestamp());
+          }
+          if(lJeoxxx.isLAST_LOGINNull()) {
+            lStatement.setNull(10, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(10, lJeoxxx.getLAST_LOGINPropertyValue().getValueTimestamp());
+          }
+        lStatement.addBatch();
+        }
+        }
+        lStatement.executeBatch();
+        lStatement.close();
+      } catch (SQLException e) {
+        while (e != null) {
+          aJeo.addError();
+          aJeo.setErrorId("");
+          aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : batchCreateAUTH_USERS");
+          aJeo.setErrorTitle("Database Exception");
+          aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+          aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+          aJeo.setErrorSeverity(3);
+          aJeo.getMostSevereError();
+          if (iMicLog.test(Log._ERR)) {
+            iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERS" + "!Exception caught!" + e.getMessage());
+          }
+  
+          if (aJeo.getSuppressException() == false) {
+            com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+            com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+            lExceptionServiceJeo.addJeo(lExceptionJeo);
+            java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+            lExceptionJeo.setTime(lExceptionTimestamp);
+            lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+            lExceptionJeo.setMethod("batchCreateAUTH_USERS");
+            lExceptionJeo.setSeverity("unknown");
+            lExceptionJeo.setLocation("");
+            lExceptionJeo.setDescription(e.getMessage());
+            lExceptionJeo.setAction("unknown");
+            lExceptionJeo.setResolution("unknown");
+      
+            StackTraceElement[] lStackTraceElements = e.getStackTrace();
+            for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+              com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+              lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+              lExceptionJeo.addJeo(lStackExceptionJeo);
+            }
+      
+            iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+          }
+          e = e.getNextException();
+        }
+        return;
+      } catch (Throwable e) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : batchCreateAUTH_USERS");
+        aJeo.setErrorTitle("Database Exception");
+        aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+        aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+        aJeo.setErrorSeverity(3);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERS" + "!Exception caught!" + e.getMessage());
+        }
+
+        if (aJeo.getSuppressException() == false) {
+          com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+          com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+          lExceptionServiceJeo.addJeo(lExceptionJeo);
+          java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+          lExceptionJeo.setTime(lExceptionTimestamp);
+          lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+          lExceptionJeo.setMethod("batchCreateAUTH_USERS");
+          lExceptionJeo.setSeverity("unknown");
+          lExceptionJeo.setLocation("");
+          lExceptionJeo.setDescription(e.getMessage());
+          lExceptionJeo.setAction("unknown");
+          lExceptionJeo.setResolution("unknown");
+    
+          StackTraceElement[] lStackTraceElements = e.getStackTrace();
+          for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+            com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+            lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+            lExceptionJeo.addJeo(lStackExceptionJeo);
+          }    
+          iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+        }
+        return;
+      }
+      aJeo.addError();
+      aJeo.setErrorId("");
+      aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : batchCreateAUTH_USERS");
+      aJeo.setErrorTitle("Success");
+      aJeo.setErrorText("The service completed successfully.");
+      aJeo.setErrorResolution("This is a notification of successful completion that requires no resolution.");
+      aJeo.setErrorSeverity(10);
+      aJeo.getMostSevereError();
+      if (iMicLog.test(Log._APP)) {
+        java.util.Date lStopTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERS" + "!Normal return!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+      }
+    }
+    public void batchCreateAUTH_USERSWithIdentity(com.esarks.arm.model.jeo.ServiceJeo aJeo) {
+      java.util.Date lStartTime = null;
+      if (iMicLog.test(Log._APP)) {
+        lStartTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERSWithIdentity" + "!Enter method");
+      }
+      DbConnectionFactory lDbConnectionFactory = DbConnectionFactory.getInstance();
+      DbConnection lDbConnection = null;
+
+      PropertyValue lDbConnectionPropertyValue = aJeo.getPropertyValue("DbConnection");
+      if (lDbConnectionPropertyValue.getValueType() != PropertyValue.CONST_VALUE_TYPE_NULL) {
+        lDbConnection = (DbConnection) lDbConnectionPropertyValue.getValueObject();
+      } else {
+        lDbConnection = lDbConnectionFactory.getDbConnection("application");
+      }
+
+      if (lDbConnection == null) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : batchCreateAUTH_USERSWithIdentity");
+        aJeo.setErrorTitle("Database Connection Failed");
+        aJeo.setErrorText("The service failed to obtain a database connection.");
+        aJeo.setErrorResolution("This is an internal application error that will likely be unresolvable without technical support intervention.");
+        aJeo.setErrorSeverity(0);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERSWithIdentity" + "!DbConnection is null");
+        }
+        return;
+      }
+
+      
+      try {
+        String lTop = "";
+        String lWhere = "";
+        ArrayList lWhereList = new ArrayList();
+        String lOrder = "";
+        if (!aJeo.getRequest().getOrderClausePropertyValue().toString().equals("")) {
+          lOrder = aJeo.getRequest().getOrderClausePropertyValue().toString();
+        }
+        String lSql = "INSERT INTO $AUTH_USERS (ID,EMAIL,PASSWORD_HASH,NAME,EMAIL_VERIFIED,VERIFICATION_CODE,VERIFICATION_CODE_EXPIRES_AT,CREATED_AT,UPDATED_AT,LAST_LOGIN) VALUES (?,?,?,?,?,?,?,?,?,?) ";
+        if (!aJeo.getRequest().getSelectClausePropertyValue().toString().equals("")) {
+          lSql = aJeo.getRequest().getSelectClausePropertyValue().toString();
+        }
+        if (!aJeo.getRequest().getWhereClausePropertyValue().toString().equals("")) {
+          lWhere = aJeo.getRequest().getWhereClausePropertyValue().toString();
+        }
+        if (lWhere.trim().length() > 0) lWhere = lWhere.trim();
+        if (lOrder.trim().length() > 0) lOrder = lOrder.trim();
+
+        int lTagSearchIndex = 0;
+        if ((lTagSearchIndex = lSql.indexOf("$*top")) > -1) {
+          if (lDbConnection.getStereotype().equals("sqlServer")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "TOP " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 5);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*limit")) > -1) {
+          if (lDbConnection.getStereotype().equals("mySql") || lDbConnection.getStereotype().equals("postgreSql")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "LIMIT " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 7);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*where")) > -1) {
+          lWhere = lWhere.trim();
+          if (lWhere.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "WHERE " + lWhere + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*order")) > -1) {
+          lOrder = lOrder.trim();
+          if (lOrder.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "ORDER BY " + lOrder + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$*")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          String lTag = lSql.substring(lTagSearchIndex+2, lSize);
+          lSql = lSql.substring(0, lTagSearchIndex) + aJeo.getRequest().getPropertyValue(lTag).toString() + lSql.substring(lSize);
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          int lSize2 = lSql.substring(lTagSearchIndex).indexOf(".");
+          if (lSize2 > -1 && lSize2 < lSize) lSize = lSize2;
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          lSql = lSql.substring(0, lTagSearchIndex) + 
+                   getObjectPrefix(lSql.substring(lTagSearchIndex+1, lSize).toLowerCase()) + lSql.substring(lTagSearchIndex+1, lSize) +
+                   lSql.substring(lSize);
+        }
+        if (iMicLog.test(Log._APP)) {
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERSWithIdentity" + "!PreparedStatement=" + lSql.trim());
+        }
+        PreparedStatement lStatement = lDbConnection.getConnection().prepareStatement(lSql.trim());
+        if (aJeo.getRequest().getValueList() != null) {
+          ArrayList lValueList = aJeo.getRequest().getValueList();
+          for (int lValueListIdx=0; lValueListIdx < lValueList.size(); lValueListIdx++) {
+            lStatement.setString(lValueListIdx+1, (String) lValueList.get(lValueListIdx));
+          }
+        } else {
+          for (int lIdx=0; lIdx < lWhereList.size(); lIdx++) {
+            lStatement.setString(lIdx+1, ((PropertyValue) lWhereList.get(lIdx)).toString());
+          }
+        }
+        {
+          com.esarks.arm.model.jeo.ServiceJeo lJeox = aJeo;
+          com.esarks.arm.model.jeo.RequestJeo lJeoxx = (com.esarks.arm.model.jeo.RequestJeo) lJeox.getJeoByInstanceNameAt("com.esarks.arm.model.jeo.RequestJeo", 0);
+          ArrayList arrayList_lJeoxxx = lJeoxx.getJeoByInstanceName("com.mybible.data.AUTH_USERS");
+          for (int idx_lJeoxxx=0; idx_lJeoxxx < arrayList_lJeoxxx.size(); idx_lJeoxxx++) {
+          com.mybible.data.AUTH_USERS lJeoxxx = (com.mybible.data.AUTH_USERS) arrayList_lJeoxxx.get(idx_lJeoxxx);
+          if(lJeoxxx.isIDNull()) {
+            lStatement.setNull(1, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(1, lJeoxxx.getIDPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isEMAILNull()) {
+            lStatement.setNull(2, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(2, lJeoxxx.getEMAILPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isPASSWORD_HASHNull()) {
+            lStatement.setNull(3, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(3, lJeoxxx.getPASSWORD_HASHPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isNAMENull()) {
+            lStatement.setNull(4, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(4, lJeoxxx.getNAMEPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isEMAIL_VERIFIEDNull()) {
+            lStatement.setNull(5, java.sql.Types.BOOLEAN);
+          } else {
+            lStatement.setBoolean(5, lJeoxxx.getEMAIL_VERIFIEDPropertyValue().getValueBoolean());
+          }
+          if(lJeoxxx.isVERIFICATION_CODENull()) {
+            lStatement.setNull(6, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(6, lJeoxxx.getVERIFICATION_CODEPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isVERIFICATION_CODE_EXPIRES_ATNull()) {
+            lStatement.setNull(7, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(7, lJeoxxx.getVERIFICATION_CODE_EXPIRES_ATPropertyValue().getValueTimestamp());
+          }
+          if(lJeoxxx.isCREATED_ATNull()) {
+            lStatement.setNull(8, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(8, lJeoxxx.getCREATED_ATPropertyValue().getValueTimestamp());
+          }
+          if(lJeoxxx.isUPDATED_ATNull()) {
+            lStatement.setNull(9, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(9, lJeoxxx.getUPDATED_ATPropertyValue().getValueTimestamp());
+          }
+          if(lJeoxxx.isLAST_LOGINNull()) {
+            lStatement.setNull(10, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(10, lJeoxxx.getLAST_LOGINPropertyValue().getValueTimestamp());
+          }
+        lStatement.addBatch();
+        }
+        }
+        lStatement.executeBatch();
+        lStatement.close();
+      } catch (SQLException e) {
+        while (e != null) {
+          aJeo.addError();
+          aJeo.setErrorId("");
+          aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : batchCreateAUTH_USERSWithIdentity");
+          aJeo.setErrorTitle("Database Exception");
+          aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+          aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+          aJeo.setErrorSeverity(3);
+          aJeo.getMostSevereError();
+          if (iMicLog.test(Log._ERR)) {
+            iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERSWithIdentity" + "!Exception caught!" + e.getMessage());
+          }
+  
+          if (aJeo.getSuppressException() == false) {
+            com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+            com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+            lExceptionServiceJeo.addJeo(lExceptionJeo);
+            java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+            lExceptionJeo.setTime(lExceptionTimestamp);
+            lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+            lExceptionJeo.setMethod("batchCreateAUTH_USERSWithIdentity");
+            lExceptionJeo.setSeverity("unknown");
+            lExceptionJeo.setLocation("");
+            lExceptionJeo.setDescription(e.getMessage());
+            lExceptionJeo.setAction("unknown");
+            lExceptionJeo.setResolution("unknown");
+      
+            StackTraceElement[] lStackTraceElements = e.getStackTrace();
+            for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+              com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+              lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+              lExceptionJeo.addJeo(lStackExceptionJeo);
+            }
+      
+            iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+          }
+          e = e.getNextException();
+        }
+        return;
+      } catch (Throwable e) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : batchCreateAUTH_USERSWithIdentity");
+        aJeo.setErrorTitle("Database Exception");
+        aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+        aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+        aJeo.setErrorSeverity(3);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERSWithIdentity" + "!Exception caught!" + e.getMessage());
+        }
+
+        if (aJeo.getSuppressException() == false) {
+          com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+          com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+          lExceptionServiceJeo.addJeo(lExceptionJeo);
+          java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+          lExceptionJeo.setTime(lExceptionTimestamp);
+          lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+          lExceptionJeo.setMethod("batchCreateAUTH_USERSWithIdentity");
+          lExceptionJeo.setSeverity("unknown");
+          lExceptionJeo.setLocation("");
+          lExceptionJeo.setDescription(e.getMessage());
+          lExceptionJeo.setAction("unknown");
+          lExceptionJeo.setResolution("unknown");
+    
+          StackTraceElement[] lStackTraceElements = e.getStackTrace();
+          for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+            com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+            lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+            lExceptionJeo.addJeo(lStackExceptionJeo);
+          }    
+          iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+        }
+        return;
+      }
+      aJeo.addError();
+      aJeo.setErrorId("");
+      aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : batchCreateAUTH_USERSWithIdentity");
+      aJeo.setErrorTitle("Success");
+      aJeo.setErrorText("The service completed successfully.");
+      aJeo.setErrorResolution("This is a notification of successful completion that requires no resolution.");
+      aJeo.setErrorSeverity(10);
+      aJeo.getMostSevereError();
+      if (iMicLog.test(Log._APP)) {
+        java.util.Date lStopTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:batchCreateAUTH_USERSWithIdentity" + "!Normal return!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+      }
+    }
+    public void createAUTH_USERS(com.esarks.arm.model.jeo.ServiceJeo aJeo) {
+      java.util.Date lStartTime = null;
+      if (iMicLog.test(Log._APP)) {
+        lStartTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:createAUTH_USERS" + "!Enter method");
+      }
+      DbConnectionFactory lDbConnectionFactory = DbConnectionFactory.getInstance();
+      DbConnection lDbConnection = null;
+
+      PropertyValue lDbConnectionPropertyValue = aJeo.getPropertyValue("DbConnection");
+      if (lDbConnectionPropertyValue.getValueType() != PropertyValue.CONST_VALUE_TYPE_NULL) {
+        lDbConnection = (DbConnection) lDbConnectionPropertyValue.getValueObject();
+      } else {
+        lDbConnection = lDbConnectionFactory.getDbConnection("application");
+      }
+
+      if (lDbConnection == null) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : createAUTH_USERS");
+        aJeo.setErrorTitle("Database Connection Failed");
+        aJeo.setErrorText("The service failed to obtain a database connection.");
+        aJeo.setErrorResolution("This is an internal application error that will likely be unresolvable without technical support intervention.");
+        aJeo.setErrorSeverity(0);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:createAUTH_USERS" + "!DbConnection is null");
+        }
+        return;
+      }
+
+      aJeo.addError();
+      aJeo.setErrorId("");
+      aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : createAUTH_USERS");
+      aJeo.setErrorTitle("Success");
+      aJeo.setErrorText("The service completed successfully.");
+      aJeo.setErrorResolution("This is a notification of successful completion that requires no resolution.");
+      aJeo.setErrorSeverity(10);
+      aJeo.getMostSevereError();
+      if (iMicLog.test(Log._APP)) {
+        java.util.Date lStopTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:createAUTH_USERS" + "!Normal return!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+      }
+    }
+    public void uidReadAUTH_USERS(com.esarks.arm.model.jeo.ServiceJeo aJeo) {
+      java.util.Date lStartTime = null;
+      if (iMicLog.test(Log._APP)) {
+        lStartTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!Enter method");
+      }
+      DbConnectionFactory lDbConnectionFactory = DbConnectionFactory.getInstance();
+      DbConnection lDbConnection = null;
+
+      PropertyValue lDbConnectionPropertyValue = aJeo.getPropertyValue("DbConnection");
+      if (lDbConnectionPropertyValue.getValueType() != PropertyValue.CONST_VALUE_TYPE_NULL) {
+        lDbConnection = (DbConnection) lDbConnectionPropertyValue.getValueObject();
+      } else {
+        lDbConnection = lDbConnectionFactory.getDbConnection("application");
+      }
+
+      if (lDbConnection == null) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : uidReadAUTH_USERS");
+        aJeo.setErrorTitle("Database Connection Failed");
+        aJeo.setErrorText("The service failed to obtain a database connection.");
+        aJeo.setErrorResolution("This is an internal application error that will likely be unresolvable without technical support intervention.");
+        aJeo.setErrorSeverity(0);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!DbConnection is null");
+        }
+        return;
+      }
+
+      
+      try {
+        String lTop = "";
+        String lWhere = "";
+        ArrayList lWhereList = new ArrayList();
+        String lOrder = "";
+        if (!aJeo.getRequest().getOrderClausePropertyValue().toString().equals("")) {
+          lOrder = aJeo.getRequest().getOrderClausePropertyValue().toString();
+        }
+        String lSql = "SELECT * FROM $AUTH_USERS $*where ";
+        if (!aJeo.getRequest().getSelectClausePropertyValue().toString().equals("")) {
+          lSql = aJeo.getRequest().getSelectClausePropertyValue().toString();
+        }
+        if (aJeo.getRequest().getWhereClausePropertyValue().toString().equals("")) {
+          com.esarks.arm.model.jeo.ServiceJeo lJeox = aJeo;
+          com.esarks.arm.model.jeo.RequestJeo lJeoxx = (com.esarks.arm.model.jeo.RequestJeo) lJeox.getJeoByInstanceNameAt("com.esarks.arm.model.jeo.RequestJeo", 0);
+          com.mybible.data.AUTH_USERS lJeoxxx = (com.mybible.data.AUTH_USERS) lJeoxx.getJeoByInstanceNameAt("com.mybible.data.AUTH_USERS", 0);
+          {
+            {
+              lWhere = lWhere.trim() + " ID=?";
+              lWhereList.add(lJeoxxx.getIDPropertyValue());
+            }
+          }
+        }
+        if (!aJeo.getRequest().getWhereClausePropertyValue().toString().equals("")) {
+          lWhere = aJeo.getRequest().getWhereClausePropertyValue().toString();
+        }
+        if (lWhere.trim().length() > 0) lWhere = lWhere.trim();
+        if (lOrder.trim().length() > 0) lOrder = lOrder.trim();
+
+        int lTagSearchIndex = 0;
+        if ((lTagSearchIndex = lSql.indexOf("$*top")) > -1) {
+          if (lDbConnection.getStereotype().equals("sqlServer")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "TOP " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 5);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*limit")) > -1) {
+          if (lDbConnection.getStereotype().equals("mySql") || lDbConnection.getStereotype().equals("postgreSql")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "LIMIT " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 7);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*where")) > -1) {
+          lWhere = lWhere.trim();
+          if (lWhere.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "WHERE " + lWhere + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*order")) > -1) {
+          lOrder = lOrder.trim();
+          if (lOrder.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "ORDER BY " + lOrder + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$*")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          String lTag = lSql.substring(lTagSearchIndex+2, lSize);
+          lSql = lSql.substring(0, lTagSearchIndex) + aJeo.getRequest().getPropertyValue(lTag).toString() + lSql.substring(lSize);
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          int lSize2 = lSql.substring(lTagSearchIndex).indexOf(".");
+          if (lSize2 > -1 && lSize2 < lSize) lSize = lSize2;
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          lSql = lSql.substring(0, lTagSearchIndex) + 
+                   getObjectPrefix(lSql.substring(lTagSearchIndex+1, lSize).toLowerCase()) + lSql.substring(lTagSearchIndex+1, lSize) +
+                   lSql.substring(lSize);
+        }
+        if (iMicLog.test(Log._APP)) {
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!PreparedStatement=" + lSql.trim());
+        }
+        PreparedStatement lStatement = lDbConnection.getConnection().prepareStatement(lSql.trim());
+        if (aJeo.getRequest().getValueList() != null) {
+          ArrayList lValueList = aJeo.getRequest().getValueList();
+          for (int lValueListIdx=0; lValueListIdx < lValueList.size(); lValueListIdx++) {
+            lStatement.setString(lValueListIdx+1, (String) lValueList.get(lValueListIdx));
+          }
+        } else {
+          for (int lIdx=0; lIdx < lWhereList.size(); lIdx++) {
+            lStatement.setString(lIdx+1, ((PropertyValue) lWhereList.get(lIdx)).toString());
+          }
+        }
+        if (iMicLog.test(Log._APP)) {
+          java.util.Date lStopTime = new java.util.Date();
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!Before executeQuery" + "!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+        }
+        ResultSet lResultSet = lStatement.executeQuery();
+        if (iMicLog.test(Log._APP)) {
+          java.util.Date lStopTime = new java.util.Date();
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!After executeQuery" + "!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+        }
+        if (lResultSet == null) {
+          aJeo.addError();
+          aJeo.setErrorId("");
+          aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : uidReadAUTH_USERS");
+          aJeo.setErrorTitle("No ResultSet Returned");
+          aJeo.setErrorText("No ResultSet was returned from the database request.");
+          aJeo.setErrorResolution("The application user may submit another request.");
+          aJeo.setErrorSeverity(4);
+          aJeo.getMostSevereError();
+          lStatement.close();
+          if (iMicLog.test(Log._APP)) {
+            java.util.Date lStopTime = new java.util.Date();
+            iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!Exit method!No ResultSet was returned from the database request");
+          }
+          return;
+        }
+        if (lResultSet.next() == false) {
+          aJeo.addError();
+          aJeo.setErrorId("");
+          aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : uidReadAUTH_USERS");
+          aJeo.setErrorTitle("No Data Returned");
+          aJeo.setErrorText("No data was returned from the database request.");
+          aJeo.setErrorResolution("The application user may submit another request.");
+          aJeo.setErrorSeverity(4);
+          aJeo.getMostSevereError();
+          lResultSet.close();
+          lStatement.close();
+          if (iMicLog.test(Log._APP)) {
+            java.util.Date lStopTime = new java.util.Date();
+            iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!Exit method!No data was returned from the database request");
+          }
+          return;
+        }
+        int lResultRowsReturned = 0;
+        {
+          com.esarks.arm.model.jeo.ServiceJeo lJeox = aJeo;
+          com.esarks.arm.model.jeo.ReplyJeo lJeoxx = (com.esarks.arm.model.jeo.ReplyJeo) lJeox.getJeoByInstanceNameAt("com.esarks.arm.model.jeo.ReplyJeo", 0);
+          do {
+            com.mybible.data.AUTH_USERS lJeoxxx = (com.mybible.data.AUTH_USERS) com.esarks.jac.JeoFactory.getInstance().reserveJeo("com.mybible.data.AUTH_USERS");
+            lJeoxx.addJeo(lJeoxxx);
+            lJeoxxx.mapFromResultSet(lResultSet, true, false);
+            lResultRowsReturned++;
+          } while (lResultSet.next());
+        }
+        if (iMicLog.test(Log._APP)) {
+          java.util.Date lStopTime = new java.util.Date();
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!Result rows returned = " + Integer.toString(lResultRowsReturned) + "!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+        }
+        lResultSet.close();
+        lStatement.close();
+      } catch (SQLException e) {
+        while (e != null) {
+          aJeo.addError();
+          aJeo.setErrorId("");
+          aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : uidReadAUTH_USERS");
+          aJeo.setErrorTitle("Database Exception");
+          aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+          aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+          aJeo.setErrorSeverity(3);
+          aJeo.getMostSevereError();
+          if (iMicLog.test(Log._ERR)) {
+            iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!Exception caught!" + e.getMessage());
+          }
+  
+          if (aJeo.getSuppressException() == false) {
+            com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+            com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+            lExceptionServiceJeo.addJeo(lExceptionJeo);
+            java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+            lExceptionJeo.setTime(lExceptionTimestamp);
+            lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+            lExceptionJeo.setMethod("uidReadAUTH_USERS");
+            lExceptionJeo.setSeverity("unknown");
+            lExceptionJeo.setLocation("");
+            lExceptionJeo.setDescription(e.getMessage());
+            lExceptionJeo.setAction("unknown");
+            lExceptionJeo.setResolution("unknown");
+      
+            StackTraceElement[] lStackTraceElements = e.getStackTrace();
+            for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+              com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+              lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+              lExceptionJeo.addJeo(lStackExceptionJeo);
+            }
+      
+            iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+          }
+          e = e.getNextException();
+        }
+        return;
+      } catch (Throwable e) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : uidReadAUTH_USERS");
+        aJeo.setErrorTitle("Database Exception");
+        aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+        aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+        aJeo.setErrorSeverity(3);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!Exception caught!" + e.getMessage());
+        }
+
+        if (aJeo.getSuppressException() == false) {
+          com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+          com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+          lExceptionServiceJeo.addJeo(lExceptionJeo);
+          java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+          lExceptionJeo.setTime(lExceptionTimestamp);
+          lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+          lExceptionJeo.setMethod("uidReadAUTH_USERS");
+          lExceptionJeo.setSeverity("unknown");
+          lExceptionJeo.setLocation("");
+          lExceptionJeo.setDescription(e.getMessage());
+          lExceptionJeo.setAction("unknown");
+          lExceptionJeo.setResolution("unknown");
+    
+          StackTraceElement[] lStackTraceElements = e.getStackTrace();
+          for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+            com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+            lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+            lExceptionJeo.addJeo(lStackExceptionJeo);
+          }    
+          iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+        }
+        return;
+      }
+      aJeo.addError();
+      aJeo.setErrorId("");
+      aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : uidReadAUTH_USERS");
+      aJeo.setErrorTitle("Success");
+      aJeo.setErrorText("The service completed successfully.");
+      aJeo.setErrorResolution("This is a notification of successful completion that requires no resolution.");
+      aJeo.setErrorSeverity(10);
+      aJeo.getMostSevereError();
+      if (iMicLog.test(Log._APP)) {
+        java.util.Date lStopTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidReadAUTH_USERS" + "!Normal return!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+      }
+    }
+    public void readAUTH_USERS(com.esarks.arm.model.jeo.ServiceJeo aJeo) {
+      java.util.Date lStartTime = null;
+      if (iMicLog.test(Log._APP)) {
+        lStartTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!Enter method");
+      }
+      DbConnectionFactory lDbConnectionFactory = DbConnectionFactory.getInstance();
+      DbConnection lDbConnection = null;
+
+      PropertyValue lDbConnectionPropertyValue = aJeo.getPropertyValue("DbConnection");
+      if (lDbConnectionPropertyValue.getValueType() != PropertyValue.CONST_VALUE_TYPE_NULL) {
+        lDbConnection = (DbConnection) lDbConnectionPropertyValue.getValueObject();
+      } else {
+        lDbConnection = lDbConnectionFactory.getDbConnection("application");
+      }
+
+      if (lDbConnection == null) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : readAUTH_USERS");
+        aJeo.setErrorTitle("Database Connection Failed");
+        aJeo.setErrorText("The service failed to obtain a database connection.");
+        aJeo.setErrorResolution("This is an internal application error that will likely be unresolvable without technical support intervention.");
+        aJeo.setErrorSeverity(0);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!DbConnection is null");
+        }
+        return;
+      }
+
+      
+      try {
+        String lTop = "";
+        String lWhere = "";
+        ArrayList lWhereList = new ArrayList();
+        String lOrder = "";
+        if (!aJeo.getRequest().getOrderClausePropertyValue().toString().equals("")) {
+          lOrder = aJeo.getRequest().getOrderClausePropertyValue().toString();
+        }
+        String lSql = "SELECT $*top * FROM $AUTH_USERS $*where $*order $*limit ";
+        if (!aJeo.getRequest().getSelectClausePropertyValue().toString().equals("")) {
+          lSql = aJeo.getRequest().getSelectClausePropertyValue().toString();
+        }
+        if (!aJeo.getRequest().getWhereClausePropertyValue().toString().equals("")) {
+          lWhere = aJeo.getRequest().getWhereClausePropertyValue().toString();
+        }
+        if (lWhere.trim().length() > 0) lWhere = lWhere.trim();
+        if (lOrder.trim().length() > 0) lOrder = lOrder.trim();
+
+        int lTagSearchIndex = 0;
+        if ((lTagSearchIndex = lSql.indexOf("$*top")) > -1) {
+          if (lDbConnection.getStereotype().equals("sqlServer")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "TOP " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 5);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*limit")) > -1) {
+          if (lDbConnection.getStereotype().equals("mySql") || lDbConnection.getStereotype().equals("postgreSql")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "LIMIT " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 7);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*where")) > -1) {
+          lWhere = lWhere.trim();
+          if (lWhere.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "WHERE " + lWhere + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*order")) > -1) {
+          lOrder = lOrder.trim();
+          if (lOrder.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "ORDER BY " + lOrder + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$*")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          String lTag = lSql.substring(lTagSearchIndex+2, lSize);
+          lSql = lSql.substring(0, lTagSearchIndex) + aJeo.getRequest().getPropertyValue(lTag).toString() + lSql.substring(lSize);
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          int lSize2 = lSql.substring(lTagSearchIndex).indexOf(".");
+          if (lSize2 > -1 && lSize2 < lSize) lSize = lSize2;
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          lSql = lSql.substring(0, lTagSearchIndex) + 
+                   getObjectPrefix(lSql.substring(lTagSearchIndex+1, lSize).toLowerCase()) + lSql.substring(lTagSearchIndex+1, lSize) +
+                   lSql.substring(lSize);
+        }
+        if (iMicLog.test(Log._APP)) {
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!PreparedStatement=" + lSql.trim());
+        }
+        PreparedStatement lStatement = lDbConnection.getConnection().prepareStatement(lSql.trim());
+        if (aJeo.getRequest().getValueList() != null) {
+          ArrayList lValueList = aJeo.getRequest().getValueList();
+          for (int lValueListIdx=0; lValueListIdx < lValueList.size(); lValueListIdx++) {
+            lStatement.setString(lValueListIdx+1, (String) lValueList.get(lValueListIdx));
+          }
+        } else {
+          for (int lIdx=0; lIdx < lWhereList.size(); lIdx++) {
+            lStatement.setString(lIdx+1, ((PropertyValue) lWhereList.get(lIdx)).toString());
+          }
+        }
+        if (iMicLog.test(Log._APP)) {
+          java.util.Date lStopTime = new java.util.Date();
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!Before executeQuery" + "!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+        }
+        ResultSet lResultSet = lStatement.executeQuery();
+        if (iMicLog.test(Log._APP)) {
+          java.util.Date lStopTime = new java.util.Date();
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!After executeQuery" + "!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+        }
+        if (lResultSet == null) {
+          aJeo.addError();
+          aJeo.setErrorId("");
+          aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : readAUTH_USERS");
+          aJeo.setErrorTitle("No ResultSet Returned");
+          aJeo.setErrorText("No ResultSet was returned from the database request.");
+          aJeo.setErrorResolution("The application user may submit another request.");
+          aJeo.setErrorSeverity(4);
+          aJeo.getMostSevereError();
+          lStatement.close();
+          if (iMicLog.test(Log._APP)) {
+            java.util.Date lStopTime = new java.util.Date();
+            iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!Exit method!No ResultSet was returned from the database request");
+          }
+          return;
+        }
+        if (lResultSet.next() == false) {
+          aJeo.addError();
+          aJeo.setErrorId("");
+          aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : readAUTH_USERS");
+          aJeo.setErrorTitle("No Data Returned");
+          aJeo.setErrorText("No data was returned from the database request.");
+          aJeo.setErrorResolution("The application user may submit another request.");
+          aJeo.setErrorSeverity(4);
+          aJeo.getMostSevereError();
+          lResultSet.close();
+          lStatement.close();
+          if (iMicLog.test(Log._APP)) {
+            java.util.Date lStopTime = new java.util.Date();
+            iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!Exit method!No data was returned from the database request");
+          }
+          return;
+        }
+        int lResultRowsReturned = 0;
+        {
+          com.esarks.arm.model.jeo.ServiceJeo lJeox = aJeo;
+          com.esarks.arm.model.jeo.ReplyJeo lJeoxx = (com.esarks.arm.model.jeo.ReplyJeo) lJeox.getJeoByInstanceNameAt("com.esarks.arm.model.jeo.ReplyJeo", 0);
+          do {
+            com.mybible.data.AUTH_USERS lJeoxxx = (com.mybible.data.AUTH_USERS) com.esarks.jac.JeoFactory.getInstance().reserveJeo("com.mybible.data.AUTH_USERS");
+            lJeoxx.addJeo(lJeoxxx);
+            lJeoxxx.mapFromResultSet(lResultSet, true, false);
+            lResultRowsReturned++;
+          } while (lResultSet.next());
+        }
+        if (iMicLog.test(Log._APP)) {
+          java.util.Date lStopTime = new java.util.Date();
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!Result rows returned = " + Integer.toString(lResultRowsReturned) + "!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+        }
+        lResultSet.close();
+        lStatement.close();
+      } catch (SQLException e) {
+        while (e != null) {
+          aJeo.addError();
+          aJeo.setErrorId("");
+          aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : readAUTH_USERS");
+          aJeo.setErrorTitle("Database Exception");
+          aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+          aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+          aJeo.setErrorSeverity(3);
+          aJeo.getMostSevereError();
+          if (iMicLog.test(Log._ERR)) {
+            iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!Exception caught!" + e.getMessage());
+          }
+  
+          if (aJeo.getSuppressException() == false) {
+            com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+            com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+            lExceptionServiceJeo.addJeo(lExceptionJeo);
+            java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+            lExceptionJeo.setTime(lExceptionTimestamp);
+            lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+            lExceptionJeo.setMethod("readAUTH_USERS");
+            lExceptionJeo.setSeverity("unknown");
+            lExceptionJeo.setLocation("");
+            lExceptionJeo.setDescription(e.getMessage());
+            lExceptionJeo.setAction("unknown");
+            lExceptionJeo.setResolution("unknown");
+      
+            StackTraceElement[] lStackTraceElements = e.getStackTrace();
+            for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+              com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+              lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+              lExceptionJeo.addJeo(lStackExceptionJeo);
+            }
+      
+            iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+          }
+          e = e.getNextException();
+        }
+        return;
+      } catch (Throwable e) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : readAUTH_USERS");
+        aJeo.setErrorTitle("Database Exception");
+        aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+        aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+        aJeo.setErrorSeverity(3);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!Exception caught!" + e.getMessage());
+        }
+
+        if (aJeo.getSuppressException() == false) {
+          com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+          com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+          lExceptionServiceJeo.addJeo(lExceptionJeo);
+          java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+          lExceptionJeo.setTime(lExceptionTimestamp);
+          lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+          lExceptionJeo.setMethod("readAUTH_USERS");
+          lExceptionJeo.setSeverity("unknown");
+          lExceptionJeo.setLocation("");
+          lExceptionJeo.setDescription(e.getMessage());
+          lExceptionJeo.setAction("unknown");
+          lExceptionJeo.setResolution("unknown");
+    
+          StackTraceElement[] lStackTraceElements = e.getStackTrace();
+          for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+            com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+            lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+            lExceptionJeo.addJeo(lStackExceptionJeo);
+          }    
+          iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+        }
+        return;
+      }
+      aJeo.addError();
+      aJeo.setErrorId("");
+      aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : readAUTH_USERS");
+      aJeo.setErrorTitle("Success");
+      aJeo.setErrorText("The service completed successfully.");
+      aJeo.setErrorResolution("This is a notification of successful completion that requires no resolution.");
+      aJeo.setErrorSeverity(10);
+      aJeo.getMostSevereError();
+      if (iMicLog.test(Log._APP)) {
+        java.util.Date lStopTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:readAUTH_USERS" + "!Normal return!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+      }
+    }
+    public void deleteAUTH_USERS(com.esarks.arm.model.jeo.ServiceJeo aJeo) {
+      java.util.Date lStartTime = null;
+      if (iMicLog.test(Log._APP)) {
+        lStartTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:deleteAUTH_USERS" + "!Enter method");
+      }
+      DbConnectionFactory lDbConnectionFactory = DbConnectionFactory.getInstance();
+      DbConnection lDbConnection = null;
+
+      PropertyValue lDbConnectionPropertyValue = aJeo.getPropertyValue("DbConnection");
+      if (lDbConnectionPropertyValue.getValueType() != PropertyValue.CONST_VALUE_TYPE_NULL) {
+        lDbConnection = (DbConnection) lDbConnectionPropertyValue.getValueObject();
+      } else {
+        lDbConnection = lDbConnectionFactory.getDbConnection("application");
+      }
+
+      if (lDbConnection == null) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : deleteAUTH_USERS");
+        aJeo.setErrorTitle("Database Connection Failed");
+        aJeo.setErrorText("The service failed to obtain a database connection.");
+        aJeo.setErrorResolution("This is an internal application error that will likely be unresolvable without technical support intervention.");
+        aJeo.setErrorSeverity(0);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:deleteAUTH_USERS" + "!DbConnection is null");
+        }
+        return;
+      }
+
+      
+      try {
+        String lTop = "";
+        String lWhere = "";
+        ArrayList lWhereList = new ArrayList();
+        String lOrder = "";
+        if (!aJeo.getRequest().getOrderClausePropertyValue().toString().equals("")) {
+          lOrder = aJeo.getRequest().getOrderClausePropertyValue().toString();
+        }
+        String lSql = "DELETE FROM $AUTH_USERS ";
+        if (!aJeo.getRequest().getSelectClausePropertyValue().toString().equals("")) {
+          lSql = aJeo.getRequest().getSelectClausePropertyValue().toString();
+        }
+        if (aJeo.getRequest().getWhereClausePropertyValue().toString().equals("")) {
+          com.esarks.arm.model.jeo.ServiceJeo lJeox = aJeo;
+          com.esarks.arm.model.jeo.RequestJeo lJeoxx = (com.esarks.arm.model.jeo.RequestJeo) lJeox.getJeoByInstanceNameAt("com.esarks.arm.model.jeo.RequestJeo", 0);
+          com.mybible.data.AUTH_USERS lJeoxxx = (com.mybible.data.AUTH_USERS) lJeoxx.getJeoByInstanceNameAt("com.mybible.data.AUTH_USERS", 0);
+          {
+            {
+              lWhere = lWhere.trim() + " ID=?";
+              lWhereList.add(lJeoxxx.getIDPropertyValue());
+            }
+          }
+        }
+        if (!aJeo.getRequest().getWhereClausePropertyValue().toString().equals("")) {
+          lWhere = aJeo.getRequest().getWhereClausePropertyValue().toString();
+        }
+        if (lWhere.trim().length() > 0) lWhere = lWhere.trim();
+        if (lOrder.trim().length() > 0) lOrder = lOrder.trim();
+
+        int lTagSearchIndex = 0;
+        if ((lTagSearchIndex = lSql.indexOf("$*top")) > -1) {
+          if (lDbConnection.getStereotype().equals("sqlServer")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "TOP " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 5);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*limit")) > -1) {
+          if (lDbConnection.getStereotype().equals("mySql") || lDbConnection.getStereotype().equals("postgreSql")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "LIMIT " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 7);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*where")) > -1) {
+          lWhere = lWhere.trim();
+          if (lWhere.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "WHERE " + lWhere + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*order")) > -1) {
+          lOrder = lOrder.trim();
+          if (lOrder.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "ORDER BY " + lOrder + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$*")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          String lTag = lSql.substring(lTagSearchIndex+2, lSize);
+          lSql = lSql.substring(0, lTagSearchIndex) + aJeo.getRequest().getPropertyValue(lTag).toString() + lSql.substring(lSize);
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          int lSize2 = lSql.substring(lTagSearchIndex).indexOf(".");
+          if (lSize2 > -1 && lSize2 < lSize) lSize = lSize2;
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          lSql = lSql.substring(0, lTagSearchIndex) + 
+                   getObjectPrefix(lSql.substring(lTagSearchIndex+1, lSize).toLowerCase()) + lSql.substring(lTagSearchIndex+1, lSize) +
+                   lSql.substring(lSize);
+        }
+        if (iMicLog.test(Log._APP)) {
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:deleteAUTH_USERS" + "!PreparedStatement=" + lSql.trim());
+        }
+        PreparedStatement lStatement = lDbConnection.getConnection().prepareStatement(lSql.trim());
+        if (aJeo.getRequest().getValueList() != null) {
+          ArrayList lValueList = aJeo.getRequest().getValueList();
+          for (int lValueListIdx=0; lValueListIdx < lValueList.size(); lValueListIdx++) {
+            lStatement.setString(lValueListIdx+1, (String) lValueList.get(lValueListIdx));
+          }
+        } else {
+          for (int lIdx=0; lIdx < lWhereList.size(); lIdx++) {
+            lStatement.setString(lIdx+1, ((PropertyValue) lWhereList.get(lIdx)).toString());
+          }
+        }
+        boolean lResult = lStatement.execute();
+        int lUpdateCount = lStatement.getUpdateCount();
+        if (iMicLog.test(Log._APP)) {
+          java.util.Date lStopTime = new java.util.Date();
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:deleteAUTH_USERS" + "!getUpdateCount = " + Integer.toString(lUpdateCount) + "!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+        }
+        aJeo.getReply().setPropertyValue("getUpdateCount", new PropertyValue(lUpdateCount));
+        lStatement.close();
+      } catch (SQLException e) {
+        while (e != null) {
+          aJeo.addError();
+          aJeo.setErrorId("");
+          aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : deleteAUTH_USERS");
+          aJeo.setErrorTitle("Database Exception");
+          aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+          aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+          aJeo.setErrorSeverity(3);
+          aJeo.getMostSevereError();
+          if (iMicLog.test(Log._ERR)) {
+            iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:deleteAUTH_USERS" + "!Exception caught!" + e.getMessage());
+          }
+  
+          if (aJeo.getSuppressException() == false) {
+            com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+            com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+            lExceptionServiceJeo.addJeo(lExceptionJeo);
+            java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+            lExceptionJeo.setTime(lExceptionTimestamp);
+            lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+            lExceptionJeo.setMethod("deleteAUTH_USERS");
+            lExceptionJeo.setSeverity("unknown");
+            lExceptionJeo.setLocation("");
+            lExceptionJeo.setDescription(e.getMessage());
+            lExceptionJeo.setAction("unknown");
+            lExceptionJeo.setResolution("unknown");
+      
+            StackTraceElement[] lStackTraceElements = e.getStackTrace();
+            for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+              com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+              lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+              lExceptionJeo.addJeo(lStackExceptionJeo);
+            }
+      
+            iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+          }
+          e = e.getNextException();
+        }
+        return;
+      } catch (Throwable e) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : deleteAUTH_USERS");
+        aJeo.setErrorTitle("Database Exception");
+        aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+        aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+        aJeo.setErrorSeverity(3);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:deleteAUTH_USERS" + "!Exception caught!" + e.getMessage());
+        }
+
+        if (aJeo.getSuppressException() == false) {
+          com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+          com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+          lExceptionServiceJeo.addJeo(lExceptionJeo);
+          java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+          lExceptionJeo.setTime(lExceptionTimestamp);
+          lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+          lExceptionJeo.setMethod("deleteAUTH_USERS");
+          lExceptionJeo.setSeverity("unknown");
+          lExceptionJeo.setLocation("");
+          lExceptionJeo.setDescription(e.getMessage());
+          lExceptionJeo.setAction("unknown");
+          lExceptionJeo.setResolution("unknown");
+    
+          StackTraceElement[] lStackTraceElements = e.getStackTrace();
+          for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+            com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+            lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+            lExceptionJeo.addJeo(lStackExceptionJeo);
+          }    
+          iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+        }
+        return;
+      }
+      aJeo.addError();
+      aJeo.setErrorId("");
+      aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : deleteAUTH_USERS");
+      aJeo.setErrorTitle("Success");
+      aJeo.setErrorText("The service completed successfully.");
+      aJeo.setErrorResolution("This is a notification of successful completion that requires no resolution.");
+      aJeo.setErrorSeverity(10);
+      aJeo.getMostSevereError();
+      if (iMicLog.test(Log._APP)) {
+        java.util.Date lStopTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:deleteAUTH_USERS" + "!Normal return!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+      }
+    }
+    public void uidUpdateAUTH_USERS(com.esarks.arm.model.jeo.ServiceJeo aJeo) {
+      java.util.Date lStartTime = null;
+      if (iMicLog.test(Log._APP)) {
+        lStartTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidUpdateAUTH_USERS" + "!Enter method");
+      }
+      DbConnectionFactory lDbConnectionFactory = DbConnectionFactory.getInstance();
+      DbConnection lDbConnection = null;
+
+      PropertyValue lDbConnectionPropertyValue = aJeo.getPropertyValue("DbConnection");
+      if (lDbConnectionPropertyValue.getValueType() != PropertyValue.CONST_VALUE_TYPE_NULL) {
+        lDbConnection = (DbConnection) lDbConnectionPropertyValue.getValueObject();
+      } else {
+        lDbConnection = lDbConnectionFactory.getDbConnection("application");
+      }
+
+      if (lDbConnection == null) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : uidUpdateAUTH_USERS");
+        aJeo.setErrorTitle("Database Connection Failed");
+        aJeo.setErrorText("The service failed to obtain a database connection.");
+        aJeo.setErrorResolution("This is an internal application error that will likely be unresolvable without technical support intervention.");
+        aJeo.setErrorSeverity(0);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:uidUpdateAUTH_USERS" + "!DbConnection is null");
+        }
+        return;
+      }
+
+      
+      try {
+        String lTop = "";
+        String lWhere = "";
+        ArrayList lWhereList = new ArrayList();
+        String lOrder = "";
+        if (!aJeo.getRequest().getOrderClausePropertyValue().toString().equals("")) {
+          lOrder = aJeo.getRequest().getOrderClausePropertyValue().toString();
+        }
+        String lSql = "UPDATE $AUTH_USERS SET EMAIL=?, PASSWORD_HASH=?, NAME=?, EMAIL_VERIFIED=?, VERIFICATION_CODE=?, VERIFICATION_CODE_EXPIRES_AT=?, CREATED_AT=?, UPDATED_AT=?, LAST_LOGIN=? WHERE ID=? ";
+        if (!aJeo.getRequest().getSelectClausePropertyValue().toString().equals("")) {
+          lSql = aJeo.getRequest().getSelectClausePropertyValue().toString();
+        }
+        if (!aJeo.getRequest().getWhereClausePropertyValue().toString().equals("")) {
+          lWhere = aJeo.getRequest().getWhereClausePropertyValue().toString();
+        }
+        if (lWhere.trim().length() > 0) lWhere = lWhere.trim();
+        if (lOrder.trim().length() > 0) lOrder = lOrder.trim();
+
+        int lTagSearchIndex = 0;
+        if ((lTagSearchIndex = lSql.indexOf("$*top")) > -1) {
+          if (lDbConnection.getStereotype().equals("sqlServer")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "TOP " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 5);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 5);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*limit")) > -1) {
+          if (lDbConnection.getStereotype().equals("mySql") || lDbConnection.getStereotype().equals("postgreSql")) {
+            if (aJeo.getRequest().getTopPropertyValue().toString().equals("")) {
+              lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+            } else {
+              lSql = lSql.substring(0, lTagSearchIndex) + "LIMIT " + aJeo.getRequest().getTopPropertyValue().toString() + lSql.substring(lTagSearchIndex + 7);
+            }
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*where")) > -1) {
+          lWhere = lWhere.trim();
+          if (lWhere.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "WHERE " + lWhere + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        if ((lTagSearchIndex = lSql.indexOf("$*order")) > -1) {
+          lOrder = lOrder.trim();
+          if (lOrder.equals("")) {
+            lSql = lSql.substring(0, lTagSearchIndex) + lSql.substring(lTagSearchIndex + 7);
+          } else {
+            lSql = lSql.substring(0, lTagSearchIndex) + "ORDER BY " + lOrder + lSql.substring(lTagSearchIndex + 7);
+          }
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$*")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          String lTag = lSql.substring(lTagSearchIndex+2, lSize);
+          lSql = lSql.substring(0, lTagSearchIndex) + aJeo.getRequest().getPropertyValue(lTag).toString() + lSql.substring(lSize);
+        }
+        while ( (lTagSearchIndex = lSql.indexOf("$")) > -1) {
+          int lSize = lSql.substring(lTagSearchIndex).indexOf(" ");
+          int lSize2 = lSql.substring(lTagSearchIndex).indexOf(".");
+          if (lSize2 > -1 && lSize2 < lSize) lSize = lSize2;
+          if (lSize == -1) {
+            lSize = lSql.length();
+          } else {
+            lSize += lTagSearchIndex;
+          }
+          lSize = lSize;
+          lSql = lSql.substring(0, lTagSearchIndex) + 
+                   getObjectPrefix(lSql.substring(lTagSearchIndex+1, lSize).toLowerCase()) + lSql.substring(lTagSearchIndex+1, lSize) +
+                   lSql.substring(lSize);
+        }
+        if (iMicLog.test(Log._APP)) {
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidUpdateAUTH_USERS" + "!PreparedStatement=" + lSql.trim());
+        }
+        PreparedStatement lStatement = lDbConnection.getConnection().prepareStatement(lSql.trim());
+        if (aJeo.getRequest().getValueList() != null) {
+          ArrayList lValueList = aJeo.getRequest().getValueList();
+          for (int lValueListIdx=0; lValueListIdx < lValueList.size(); lValueListIdx++) {
+            lStatement.setString(lValueListIdx+1, (String) lValueList.get(lValueListIdx));
+          }
+        } else {
+          for (int lIdx=0; lIdx < lWhereList.size(); lIdx++) {
+            lStatement.setString(lIdx+1, ((PropertyValue) lWhereList.get(lIdx)).toString());
+          }
+        }
+        {
+          com.esarks.arm.model.jeo.ServiceJeo lJeox = aJeo;
+          com.esarks.arm.model.jeo.RequestJeo lJeoxx = (com.esarks.arm.model.jeo.RequestJeo) lJeox.getJeoByInstanceNameAt("com.esarks.arm.model.jeo.RequestJeo", 0);
+          com.mybible.data.AUTH_USERS lJeoxxx = (com.mybible.data.AUTH_USERS) lJeoxx.getJeoByInstanceNameAt("com.mybible.data.AUTH_USERS", 0);
+          if(lJeoxxx.isEMAILNull()) {
+            lStatement.setNull(1, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(1, lJeoxxx.getEMAILPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isPASSWORD_HASHNull()) {
+            lStatement.setNull(2, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(2, lJeoxxx.getPASSWORD_HASHPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isNAMENull()) {
+            lStatement.setNull(3, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(3, lJeoxxx.getNAMEPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isEMAIL_VERIFIEDNull()) {
+            lStatement.setNull(4, java.sql.Types.BOOLEAN);
+          } else {
+            lStatement.setBoolean(4, lJeoxxx.getEMAIL_VERIFIEDPropertyValue().getValueBoolean());
+          }
+          if(lJeoxxx.isVERIFICATION_CODENull()) {
+            lStatement.setNull(5, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(5, lJeoxxx.getVERIFICATION_CODEPropertyValue().getValueString());
+          }
+          if(lJeoxxx.isVERIFICATION_CODE_EXPIRES_ATNull()) {
+            lStatement.setNull(6, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(6, lJeoxxx.getVERIFICATION_CODE_EXPIRES_ATPropertyValue().getValueTimestamp());
+          }
+          if(lJeoxxx.isCREATED_ATNull()) {
+            lStatement.setNull(7, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(7, lJeoxxx.getCREATED_ATPropertyValue().getValueTimestamp());
+          }
+          if(lJeoxxx.isUPDATED_ATNull()) {
+            lStatement.setNull(8, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(8, lJeoxxx.getUPDATED_ATPropertyValue().getValueTimestamp());
+          }
+          if(lJeoxxx.isLAST_LOGINNull()) {
+            lStatement.setNull(9, java.sql.Types.TIMESTAMP);
+          } else {
+            lStatement.setTimestamp(9, lJeoxxx.getLAST_LOGINPropertyValue().getValueTimestamp());
+          }
+          if(lJeoxxx.isIDNull()) {
+            lStatement.setNull(10, java.sql.Types.VARCHAR);
+          } else {
+            lStatement.setString(10, lJeoxxx.getIDPropertyValue().getValueString());
+          }
+        }
+        boolean lResult = lStatement.execute();
+        int lUpdateCount = lStatement.getUpdateCount();
+        if (iMicLog.test(Log._APP)) {
+          java.util.Date lStopTime = new java.util.Date();
+          iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidUpdateAUTH_USERS" + "!getUpdateCount = " + Integer.toString(lUpdateCount) + "!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+        }
+        aJeo.getReply().setPropertyValue("getUpdateCount", new PropertyValue(lUpdateCount));
+        lStatement.close();
+      } catch (SQLException e) {
+        while (e != null) {
+          aJeo.addError();
+          aJeo.setErrorId("");
+          aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : uidUpdateAUTH_USERS");
+          aJeo.setErrorTitle("Database Exception");
+          aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+          aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+          aJeo.setErrorSeverity(3);
+          aJeo.getMostSevereError();
+          if (iMicLog.test(Log._ERR)) {
+            iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:uidUpdateAUTH_USERS" + "!Exception caught!" + e.getMessage());
+          }
+  
+          if (aJeo.getSuppressException() == false) {
+            com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+            com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+            lExceptionServiceJeo.addJeo(lExceptionJeo);
+            java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+            lExceptionJeo.setTime(lExceptionTimestamp);
+            lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+            lExceptionJeo.setMethod("uidUpdateAUTH_USERS");
+            lExceptionJeo.setSeverity("unknown");
+            lExceptionJeo.setLocation("");
+            lExceptionJeo.setDescription(e.getMessage());
+            lExceptionJeo.setAction("unknown");
+            lExceptionJeo.setResolution("unknown");
+      
+            StackTraceElement[] lStackTraceElements = e.getStackTrace();
+            for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+              com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+              lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+              lExceptionJeo.addJeo(lStackExceptionJeo);
+            }
+      
+            iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+          }
+          e = e.getNextException();
+        }
+        return;
+      } catch (Throwable e) {
+        aJeo.addError();
+        aJeo.setErrorId("");
+        aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : uidUpdateAUTH_USERS");
+        aJeo.setErrorTitle("Database Exception");
+        aJeo.setErrorText("A database exception was caught: " + e.getMessage());
+        aJeo.setErrorResolution("The application user may evaluate the conditions that caused this problem, and may need to escalate the problem to technical support.");
+        aJeo.setErrorSeverity(3);
+        aJeo.getMostSevereError();
+        if (iMicLog.test(Log._ERR)) {
+          iMicLog.println(Log._ERR, "ERR-com.mybible.data.AUTH_USERSCrud:uidUpdateAUTH_USERS" + "!Exception caught!" + e.getMessage());
+        }
+
+        if (aJeo.getSuppressException() == false) {
+          com.esarks.arm.model.jeo.ServiceJeo lExceptionServiceJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+          com.esarks.arm.logging.ExceptionJeo lExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("detail");
+          lExceptionServiceJeo.addJeo(lExceptionJeo);
+          java.sql.Timestamp lExceptionTimestamp = new java.sql.Timestamp(new java.util.Date().getTime());
+          lExceptionJeo.setTime(lExceptionTimestamp);
+          lExceptionJeo.setModule("com.mybible.data.AUTH_USERSCrud_Crud : com.mybible.data.AUTH_USERSCrud");
+          lExceptionJeo.setMethod("uidUpdateAUTH_USERS");
+          lExceptionJeo.setSeverity("unknown");
+          lExceptionJeo.setLocation("");
+          lExceptionJeo.setDescription(e.getMessage());
+          lExceptionJeo.setAction("unknown");
+          lExceptionJeo.setResolution("unknown");
+    
+          StackTraceElement[] lStackTraceElements = e.getStackTrace();
+          for (int lTraceIdx=0; lTraceIdx < lStackTraceElements.length; lTraceIdx++) {
+            com.esarks.arm.logging.ExceptionJeo lStackExceptionJeo = new com.esarks.arm.logging.ExceptionJeo("trace");
+            lStackExceptionJeo.setDescription(lStackTraceElements[lTraceIdx].toString());
+            lExceptionJeo.addJeo(lStackExceptionJeo);
+          }    
+          iScript.execMethod("com.esarks.arm.logging.ExceptionRpt", "render", new Object[]{"logs.Exception_" + Long.toString(new java.util.Date().getTime()), lExceptionServiceJeo});
+        }
+        return;
+      }
+      aJeo.addError();
+      aJeo.setErrorId("");
+      aJeo.setErrorLocation("com.mybible.data.AUTH_USERSCrud_Crud : uidUpdateAUTH_USERS");
+      aJeo.setErrorTitle("Success");
+      aJeo.setErrorText("The service completed successfully.");
+      aJeo.setErrorResolution("This is a notification of successful completion that requires no resolution.");
+      aJeo.setErrorSeverity(10);
+      aJeo.getMostSevereError();
+      if (iMicLog.test(Log._APP)) {
+        java.util.Date lStopTime = new java.util.Date();
+        iMicLog.println(Log._APP, "APP-com.mybible.data.AUTH_USERSCrud:uidUpdateAUTH_USERS" + "!Normal return!Elapsed time = " + Long.toString(lStopTime.getTime() - lStartTime.getTime()));
+      }
+    }
+
+  private String getObjectPrefix(String aObjectName) {
+    DbConnectionFactory lDbConnectionFactory = DbConnectionFactory.getInstance();
+    DbConnection lDbConnection = lDbConnectionFactory.getAssociatedDbConnection(aObjectName.toLowerCase());
+    if (lDbConnection == null) {
+      if (iMicLog.test(Log._APP)) {
+        iMicLog.println(Log._APP, "APP-" + iScriptFullName + ":getObjectPrefix(" + aObjectName + ")!Object name not in known list.");
+      }
+      return "";
+    }
+    return lDbConnection.getPrefix();    
+  }
+
+//$Section=Deleted$Preserve=yes
+
+//----------------------------------------------------------------------------
+// This section contains orphaned code from deleted operations.
+//----------------------------------------------------------------------------
+
+//$Section=Deleted$Preserve=no
+
+//End of script---------------

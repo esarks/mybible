@@ -1,0 +1,1 @@
+<jacrun script="com.esarks.jac.make.MakeAll" method="execute" argument="com.mybible.data.MyBibleMake" argument2="true" />

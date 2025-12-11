@@ -1,0 +1,12 @@
+<com.esarks.arm.schemas.components.root>
+  <!--
+    MyBible Component Definitions
+    Defines database tables for the MyBible system
+  -->
+
+  <component name="AUTH_USERS"
+             type="SqlTable"
+             source="com.mybible.data.MyBibleDdl"
+             dbConnection="mybible" />
+
+</com.esarks.arm.schemas.components.root>

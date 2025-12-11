@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MyBible Configuration File
+
+  This file contains all configuration settings for the MyBible
+  JAC application including database connections, server settings, JWT
+  configuration, and storage options.
+-->
+<properties>
+
+  <!-- ===================================================================== -->
+  <!-- DATABASE CONFIGURATION                                                -->
+  <!-- ===================================================================== -->
+  <database>
+    <!-- Primary Application Database - Google Cloud SQL -->
+    <connection id="application">
+      <driver>org.postgresql.Driver</driver>
+      <!-- Cloud SQL Connection via Cloud SQL Proxy -->
+      <url>jdbc:postgresql://localhost:5432/mybible_db</url>
+      <username>mybible_user</username>
+      <password>CHANGE_IN_PRODUCTION</password>
+
+      <!-- Connection Pool Settings -->
+      <pool>
+        <minConnections>2</minConnections>
+        <maxConnections>10</maxConnections>
+        <idleTimeout>300000</idleTimeout>
+        <connectionTimeout>30000</connectionTimeout>
+      </pool>
+
+      <!-- Database Options -->
+      <options>
+        <autoCommit>false</autoCommit>
+        <isolationLevel>TRANSACTION_READ_COMMITTED</isolationLevel>
+        <queryTimeout>30</queryTimeout>
+      </options>
+    </connection>
+  </database>
+
+  <!-- ===================================================================== -->
+  <!-- SERVER CONFIGURATION                                                  -->
+  <!-- ===================================================================== -->
+  <server>
+    <!-- HTTP Server Settings -->
+    <http>
+      <enabled>true</enabled>
+      <port>8080</port>
+      <host>0.0.0.0</host>
+      <contextPath>/api</contextPath>
+      <maxThreads>100</maxThreads>
+      <minThreads>5</minThreads>
+      <idleTimeout>30000</idleTimeout>
+    </http>
+
+    <!-- CORS Configuration -->
+    <cors>
+      <enabled>true</enabled>
+      <allowedOrigins>http://localhost:3000,http://localhost:8080</allowedOrigins>
+      <allowedMethods>GET,POST,PUT,DELETE,OPTIONS</allowedMethods>
+      <allowedHeaders>Content-Type,Authorization,X-Requested-With</allowedHeaders>
+      <allowCredentials>true</allowCredentials>
+      <maxAge>3600</maxAge>
+    </cors>
+  </server>
+
+  <!-- ===================================================================== -->
+  <!-- AUTHENTICATION & SECURITY                                             -->
+  <!-- ===================================================================== -->
+  <authentication>
+    <!-- JWT Settings -->
+    <jwt>
+      <secret>mybible-256-bit-secret-key-change-in-production-min-32-chars</secret>
+      <issuer>mybible-api</issuer>
+      <audience>mybible-clients</audience>
+      <expirationMs>86400000</expirationMs>
+      <algorithm>HS256</algorithm>
+    </jwt>
+
+    <!-- Password Hashing -->
+    <password>
+      <algorithm>SHA-256</algorithm>
+    </password>
+
+    <!-- Session Management -->
+    <session>
+      <enabled>false</enabled>
+      <timeoutMinutes>30</timeoutMinutes>
+    </session>
+  </authentication>
+
+  <!-- ===================================================================== -->
+  <!-- BIBLE DATA CONFIGURATION                                              -->
+  <!-- ===================================================================== -->
+  <bible>
+    <!-- Local Bible JSON files -->
+    <dataPath>C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\app\com\mybible\bibles</dataPath>
+    <!-- Available translations -->
+    <translations>asv,asvs,bishops,coverdale,geneva,kjv,kjv_strongs,net,tyndale,web</translations>
+    <defaultTranslation>kjv</defaultTranslation>
+  </bible>
+
+  <!-- ===================================================================== -->
+  <!-- LOGGING                                                               -->
+  <!-- ===================================================================== -->
+  <logging>
+    <level>INFO</level>
+    <logPath>C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\logs</logPath>
+    <maxFileSize>10485760</maxFileSize>
+    <maxBackupFiles>10</maxBackupFiles>
+
+    <!-- Request Logging -->
+    <requests>
+      <enabled>true</enabled>
+      <logHeaders>false</logHeaders>
+      <logBody>false</logBody>
+    </requests>
+
+    <!-- SQL Logging -->
+    <sql>
+      <enabled>true</enabled>
+      <logStatements>true</logStatements>
+      <slowQueryThresholdMs>1000</slowQueryThresholdMs>
+    </sql>
+  </logging>
+
+  <!-- ===================================================================== -->
+  <!-- DEVELOPMENT & DEBUGGING                                               -->
+  <!-- ===================================================================== -->
+  <development>
+    <mode>true</mode>
+    <verboseErrors>true</verboseErrors>
+  </development>
+
+</properties>
