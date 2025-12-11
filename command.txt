@@ -1,0 +1,26 @@
+# MyBible Build and Deploy Commands
+# ==================================
+
+# Step 1: Build the application (run from mybible/bin directory)
+cd C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024\app\com\mybible\bin
+call allPhases.bat
+
+# Step 2: Build Docker image (MUST run from jac2024 root directory!)
+cd C:\Users\ptm\OneDrive\Documents\GitHub\ArchitectsCompanion\jac2024
+docker build -t gcr.io/mybible-480818/mybible-app:v10 -f app/com/mybible/docker/Dockerfile .
+
+# Step 3: Push to Google Container Registry
+docker push gcr.io/mybible-480818/mybible-app:v10
+
+# Step 4: Deploy to Cloud Run
+gcloud run deploy mybible-app --image gcr.io/mybible-480818/mybible-app:v10 --region us-central1 --platform managed --allow-unauthenticated --port 8080 --set-env-vars "DB_HOST=34.27.90.206,DB_PORT=5432,DB_PASSWORD=Newpass5!!!,JWT_SECRET=MyBible2024SecureJWTSecretKey32!"
+
+# Service URL: https://mybible-app-202552398298.us-central1.run.app
+
+# ==================================
+# Cloud SQL Studio Access
+# ==================================
+# URL: https://console.cloud.google.com/sql/instances/mybible-db/studio?project=mybible-480818
+# Database: mybible_db
+# User: mybible_user
+# Password: Newpass5!!!

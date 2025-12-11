@@ -143,6 +143,26 @@ if exist "%UTIL_SRC%\EmailService.java" (
     )
 )
 
+if exist "%UTIL_SRC%\BibleService.java" (
+    echo     Compiling BibleService.java...
+    "%JAVA_HOME%\bin\javac.exe" -cp "%CLASSPATH%;%CLASSES_OUT%" -d "%CLASSES_OUT%" "%UTIL_SRC%\BibleService.java"
+    if errorlevel 1 (
+        echo   WARNING: BibleService.java compilation failed
+    ) else (
+        echo     SUCCESS: BibleService.java compiled
+    )
+)
+
+if exist "%UTIL_SRC%\ApiBibleService.java" (
+    echo     Compiling ApiBibleService.java...
+    "%JAVA_HOME%\bin\javac.exe" -cp "%CLASSPATH%;%CLASSES_OUT%" -d "%CLASSES_OUT%" "%UTIL_SRC%\ApiBibleService.java"
+    if errorlevel 1 (
+        echo   WARNING: ApiBibleService.java compilation failed
+    ) else (
+        echo     SUCCESS: ApiBibleService.java compiled
+    )
+)
+
 echo.
 echo Phase 3.55 Complete: Utility classes compiled
 echo ========================================================================

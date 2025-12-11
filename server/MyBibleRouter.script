@@ -63,6 +63,33 @@ if (smtpUsername != null && !smtpUsername.isEmpty() &&
 }
 System.out.println("[EMAIL] EmailService initialized (enabled=" + emailService.isEnabled() + ")");
 
+// Initialize BibleService and load translations
+final com.mybible.util.BibleService bibleService = com.mybible.util.BibleService.getInstance();
+String biblesPath = System.getenv("BIBLES_PATH");
+if (biblesPath == null || biblesPath.isEmpty()) {
+    // Default path - works in Docker container
+    biblesPath = "/opt/jac/app/com/mybible/bibles";
+    // Fallback for local dev
+    java.io.File f = new java.io.File(biblesPath);
+    if (!f.exists()) {
+        biblesPath = System.getProperty("user.dir") + "/app/com/mybible/bibles";
+    }
+}
+System.out.println("[BIBLE] Initializing BibleService with path: " + biblesPath);
+bibleService.initialize(biblesPath);
+bibleService.loadAllTranslations();
+System.out.println("[BIBLE] BibleService ready (loaded=" + bibleService.isLoaded() + ")");
+
+// Initialize ApiBibleService for external API translations (NIV, ESV, NLT, etc.)
+final com.mybible.util.ApiBibleService apiBibleService = com.mybible.util.ApiBibleService.getInstance();
+String apiBibleKey = System.getenv("API_BIBLE_KEY");
+if (apiBibleKey != null && !apiBibleKey.isEmpty()) {
+    apiBibleService.configure(apiBibleKey);
+    System.out.println("[API_BIBLE] ApiBibleService configured with API key");
+} else {
+    System.out.println("[API_BIBLE] No API_BIBLE_KEY found - external translations disabled");
+}
+
 System.out.println("[SERVER] Creating Jetty server on port " + port);
 org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server(port);
 
@@ -180,6 +207,14 @@ context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
                 throws jakarta.servlet.ServletException, java.io.IOException {
             response.setContentType("text/html");
             response.setStatus(200);
+
+            // Check for ?deleted=true parameter
+            String deleted = request.getParameter("deleted");
+            String deletedMessage = "";
+            if ("true".equals(deleted)) {
+                deletedMessage = "        <div style=\"background: #d4edda; border: 1px solid #28a745; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px;\">Your account has been successfully deleted. Thank you for using MyBible.</div>\n";
+            }
+
             response.getWriter().write("<!DOCTYPE html>\n" +
                 "<html lang=\"en\">\n" +
                 "<head>\n" +
@@ -199,6 +234,7 @@ context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
                 "</head>\n" +
                 "<body>\n" +
                 "    <div class=\"container\">\n" +
+                deletedMessage +
                 "        <h1>MyBible</h1>\n" +
                 "        <p class=\"subtitle\">Personal Bible Study Application</p>\n" +
                 "        <div>\n" +
@@ -412,7 +448,7 @@ context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
 ), "/register");
 
 // ========================================================================
-// DASHBOARD PAGE - GET /dashboard
+// DASHBOARD PAGE - GET /dashboard (Server-side rendered like AllowanceAlley)
 // ========================================================================
 System.out.println("[SERVER] Adding /dashboard endpoint");
 context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
@@ -421,95 +457,126 @@ context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
         protected void doGet(jakarta.servlet.http.HttpServletRequest request,
                             jakarta.servlet.http.HttpServletResponse response)
                 throws jakarta.servlet.ServletException, java.io.IOException {
-            response.setContentType("text/html");
-            response.setStatus(200);
-            response.getWriter().write("<!DOCTYPE html>\n" +
-                "<html lang=\"en\">\n" +
-                "<head>\n" +
-                "    <meta charset=\"UTF-8\">\n" +
-                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
-                "    <title>Dashboard - MyBible</title>\n" +
-                "    <style>\n" +
-                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }\n" +
-                "        .navbar { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }\n" +
-                "        .navbar h1 { margin: 0; font-size: 20px; }\n" +
-                "        .navbar a { color: white; text-decoration: none; margin-left: 20px; }\n" +
-                "        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }\n" +
-                "        .welcome { background: white; padding: 30px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n" +
-                "        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }\n" +
-                "        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n" +
-                "        .card h3 { color: #2c3e50; margin-top: 0; }\n" +
-                "        .btn { display: inline-block; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 4px; }\n" +
-                "        .btn:hover { background: #2980b9; }\n" +
-                "        .user-info { color: #7f8c8d; }\n" +
-                "    </style>\n" +
-                "</head>\n" +
-                "<body>\n" +
-                "    <div class=\"navbar\">\n" +
-                "        <h1>MyBible</h1>\n" +
-                "        <div>\n" +
-                "            <span id=\"userEmail\" class=\"user-info\"></span>\n" +
-                "            <a href=\"#\" onclick=\"logout()\">Logout</a>\n" +
-                "        </div>\n" +
-                "    </div>\n" +
-                "    <div class=\"container\">\n" +
-                "        <div class=\"welcome\">\n" +
-                "            <h2>Welcome, <span id=\"userName\">User</span>!</h2>\n" +
-                "            <p>Your personal Bible study dashboard.</p>\n" +
-                "        </div>\n" +
-                "        <div class=\"cards\">\n" +
-                "            <div class=\"card\">\n" +
-                "                <h3>Read Bible</h3>\n" +
-                "                <p>Access 10 different Bible translations including KJV, ASV, NET, and more.</p>\n" +
-                "                <a href=\"#\" class=\"btn\">Start Reading</a>\n" +
-                "            </div>\n" +
-                "            <div class=\"card\">\n" +
-                "                <h3>My Notes</h3>\n" +
-                "                <p>Create and manage personal notes on Bible passages.</p>\n" +
-                "                <a href=\"#\" class=\"btn\">View Notes</a>\n" +
-                "            </div>\n" +
-                "            <div class=\"card\">\n" +
-                "                <h3>Bookmarks</h3>\n" +
-                "                <p>Quick access to your saved passages and favorite verses.</p>\n" +
-                "                <a href=\"#\" class=\"btn\">View Bookmarks</a>\n" +
-                "            </div>\n" +
-                "            <div class=\"card\">\n" +
-                "                <h3>Reading Plans</h3>\n" +
-                "                <p>Follow structured reading plans to study the Bible systematically.</p>\n" +
-                "                <a href=\"#\" class=\"btn\">View Plans</a>\n" +
-                "            </div>\n" +
-                "        </div>\n" +
-                "    </div>\n" +
-                "    <script>\n" +
-                "        const token = localStorage.getItem('token');\n" +
-                "        if (!token) {\n" +
-                "            window.location.href = '/login';\n" +
-                "        } else {\n" +
-                "            fetch('/api/auth/me', {\n" +
-                "                headers: { 'Authorization': 'Bearer ' + token }\n" +
-                "            })\n" +
-                "            .then(r => r.json())\n" +
-                "            .then(data => {\n" +
-                "                if (data.success) {\n" +
-                "                    document.getElementById('userName').textContent = data.user.name || 'User';\n" +
-                "                    document.getElementById('userEmail').textContent = data.user.email;\n" +
-                "                } else {\n" +
-                "                    localStorage.removeItem('token');\n" +
-                "                    window.location.href = '/login';\n" +
-                "                }\n" +
-                "            })\n" +
-                "            .catch(() => {\n" +
-                "                localStorage.removeItem('token');\n" +
-                "                window.location.href = '/login';\n" +
-                "            });\n" +
-                "        }\n" +
-                "        function logout() {\n" +
-                "            localStorage.removeItem('token');\n" +
-                "            window.location.href = '/login';\n" +
-                "        }\n" +
-                "    </script>\n" +
-                "</body>\n" +
-                "</html>");
+
+            // Server-side auth check
+            com.mybible.util.RequestContext ctx = com.mybible.util.RequestContext.fromRequest(request);
+            if (!ctx.isAuthenticated()) {
+                response.sendRedirect("/login");
+                return;
+            }
+
+            String userEmail = ctx.getEmail();
+            String userName = ctx.getName();
+            String userId = ctx.getUserId();
+
+            // Get user data from DB if needed
+            if (userName == null || userName.isEmpty()) {
+                try {
+                    com.esarks.arm.model.jeo.ServiceJeo findJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                    findJeo.getRequest().setWhereClause("ID = '" + userId.replace("'", "''") + "'");
+                    authUsersCrud.readAUTH_USERS(findJeo);
+                    if (findJeo.getReply() != null && findJeo.getReply().getJeoSize() > 0) {
+                        com.mybible.data.AUTH_USERS user = (com.mybible.data.AUTH_USERS) findJeo.getReply().getJeoAt(0);
+                        userName = user.getNAME();
+                    }
+                } catch (Exception e) {
+                    System.out.println("[DASHBOARD] Error getting user: " + e.getMessage());
+                }
+            }
+            if (userName == null || userName.isEmpty()) {
+                userName = "User";
+            }
+
+            response.setContentType("text/html;charset=UTF-8");
+            java.io.PrintWriter out = response.getWriter();
+
+            out.println("<!DOCTYPE html>");
+            out.println("<html><head>");
+            out.println("  <title>Dashboard - MyBible</title>");
+            out.println("  <meta name='viewport' content='width=device-width, initial-scale=1.0'>");
+            out.println("  <style>");
+            out.println("    * { margin: 0; padding: 0; box-sizing: border-box; }");
+            out.println("    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f5f7fb; }");
+            out.println("    .header { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 20px; }");
+            out.println("    .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }");
+            out.println("    .header h1 { font-size: 24px; }");
+            out.println("    .header-right { display: flex; align-items: center; gap: 15px; }");
+            out.println("    .user-info { text-align: right; }");
+            out.println("    .user-info .name { font-weight: 600; }");
+            out.println("    .user-info .email { font-size: 12px; opacity: 0.8; }");
+            out.println("    .header-actions { display: flex; gap: 10px; }");
+            out.println("    .header-actions button { background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; }");
+            out.println("    .header-actions button:hover { background: rgba(255,255,255,0.3); }");
+            out.println("    .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }");
+            out.println("    .welcome { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px; margin-bottom: 30px; }");
+            out.println("    .welcome h2 { color: #2c3e50; margin-bottom: 10px; }");
+            out.println("    .welcome p { color: #666; }");
+            out.println("    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }");
+            out.println("    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-left: 4px solid #3498db; }");
+            out.println("    .card h3 { color: #2c3e50; margin-bottom: 10px; }");
+            out.println("    .card p { color: #666; margin-bottom: 15px; font-size: 14px; }");
+            out.println("    .card .btn { display: inline-block; padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 6px; font-size: 14px; }");
+            out.println("    .card .btn:hover { background: #2980b9; }");
+            out.println("  </style>");
+            out.println("</head><body>");
+
+            // Header with buttons like AllowanceAlley
+            out.println("  <div class='header'>");
+            out.println("    <div class='header-content'>");
+            out.println("      <h1>MyBible</h1>");
+            out.println("      <div class='header-right'>");
+            out.println("        <div class='user-info'>");
+            out.println("          <div class='name'>" + escapeHtml(userName) + "</div>");
+            out.println("          <div class='email'>" + escapeHtml(userEmail) + "</div>");
+            out.println("        </div>");
+            out.println("        <div class='header-actions'>");
+            out.println("          <button onclick=\"window.location.href='/settings'\">Settings</button>");
+            out.println("          <button onclick=\"window.location.href='/logout'\">Sign Out</button>");
+            out.println("        </div>");
+            out.println("      </div>");
+            out.println("    </div>");
+            out.println("  </div>");
+
+            out.println("  <div class='container'>");
+            out.println("    <div class='welcome'>");
+            out.println("      <h2>Welcome back, " + escapeHtml(userName) + "!</h2>");
+            out.println("      <p>Your personal Bible study dashboard.</p>");
+            out.println("    </div>");
+
+            out.println("    <div class='cards'>");
+            out.println("      <div class='card'>");
+            out.println("        <h3>Read Bible</h3>");
+            out.println("        <p>Access 10 different Bible translations including KJV, ASV, NET, and more.</p>");
+            out.println("        <a href='/read' class='btn'>Start Reading</a>");
+            out.println("      </div>");
+            out.println("      <div class='card'>");
+            out.println("        <h3>My Notes</h3>");
+            out.println("        <p>Create and manage personal notes on Bible passages.</p>");
+            out.println("        <a href='#' class='btn'>View Notes</a>");
+            out.println("      </div>");
+            out.println("      <div class='card'>");
+            out.println("        <h3>Bookmarks</h3>");
+            out.println("        <p>Quick access to your saved passages and favorite verses.</p>");
+            out.println("        <a href='#' class='btn'>View Bookmarks</a>");
+            out.println("      </div>");
+            out.println("      <div class='card'>");
+            out.println("        <h3>Reading Plans</h3>");
+            out.println("        <p>Follow structured reading plans to study the Bible systematically.</p>");
+            out.println("        <a href='#' class='btn'>View Plans</a>");
+            out.println("      </div>");
+            out.println("    </div>");
+            out.println("  </div>");
+
+            out.println("</body></html>");
+        }
+
+        private String escapeHtml(String input) {
+            if (input == null) return "";
+            return input.replace("&", "&amp;")
+                        .replace("<", "&lt;")
+                        .replace(">", "&gt;")
+                        .replace("\"", "&quot;")
+                        .replace("'", "&#x27;");
         }
     }
 ), "/dashboard");
@@ -701,6 +768,13 @@ context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
                 String userId = user.getID("");
                 String userEmail = user.getEMAIL("");
                 String token = com.mybible.util.JWTUtil.generate(userId, userEmail, "user");
+
+                // Set auth_token cookie (like AllowanceAlley does)
+                jakarta.servlet.http.Cookie authCookie = new jakarta.servlet.http.Cookie("auth_token", token);
+                authCookie.setPath("/");
+                authCookie.setMaxAge(24 * 60 * 60); // 24 hours
+                authCookie.setHttpOnly(true);
+                response.addCookie(authCookie);
 
                 String userName = user.getNAME("");
                 response.setStatus(200);
@@ -1003,8 +1077,11 @@ context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
                 }
 
                 String userId = ctx.getUserId();
+                String userEmail = ctx.getEmail();
 
-                // Find user
+                System.out.println("[DELETE] Starting account deletion for user: " + userId + " (" + userEmail + ")");
+
+                // Find user first
                 com.esarks.arm.model.jeo.ServiceJeo findJeo = new com.esarks.arm.model.jeo.ServiceJeo();
                 findJeo.getRequest().setWhereClause("ID = '" + userId.replace("'", "''") + "'");
                 authUsersCrud.readAUTH_USERS(findJeo);
@@ -1018,12 +1095,20 @@ context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
                 com.esarks.jac.Jeo jeo = findJeo.getReply().getJeoAt(0);
                 com.mybible.data.AUTH_USERS user = (com.mybible.data.AUTH_USERS) jeo;
 
-                // Delete user
+                // Delete user using CRUD service - pass JEO with ID set, empty WHERE clause triggers ID-based delete
                 com.esarks.arm.model.jeo.ServiceJeo deleteJeo = new com.esarks.arm.model.jeo.ServiceJeo();
                 deleteJeo.getRequest().addJeo(user);
                 authUsersCrud.deleteAUTH_USERS(deleteJeo);
 
-                System.out.println("[DELETE] Account deleted: " + userId);
+                // Check for errors
+                if (deleteJeo.getError() != null && deleteJeo.getError().getSeverity() < 5) {
+                    System.out.println("[DELETE] Delete failed with error: " + deleteJeo.getError().getText());
+                    response.setStatus(500);
+                    response.getWriter().write("{\"success\":false,\"error\":{\"code\":\"DELETE_FAILED\",\"message\":\"Failed to delete account\"}}");
+                    return;
+                }
+
+                System.out.println("[DELETE] Account deleted successfully: " + userId);
 
                 response.setStatus(200);
                 response.getWriter().write("{\"success\":true,\"message\":\"Account deleted successfully\"}");
@@ -1039,7 +1124,7 @@ context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
 ), "/api/auth/account");
 
 // ========================================================================
-// SETTINGS PAGE - GET /settings
+// SETTINGS PAGE - GET/POST /settings (Like AllowanceAlley - asks for NAME to confirm delete)
 // ========================================================================
 System.out.println("[SERVER] Adding /settings endpoint");
 context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
@@ -1048,97 +1133,247 @@ context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
         protected void doGet(jakarta.servlet.http.HttpServletRequest request,
                             jakarta.servlet.http.HttpServletResponse response)
                 throws jakarta.servlet.ServletException, java.io.IOException {
-            response.setContentType("text/html");
-            response.setStatus(200);
-            response.getWriter().write("<!DOCTYPE html>\n" +
-                "<html lang=\"en\">\n" +
-                "<head>\n" +
-                "    <meta charset=\"UTF-8\">\n" +
-                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n" +
-                "    <title>Settings - MyBible</title>\n" +
-                "    <style>\n" +
-                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }\n" +
-                "        .container { max-width: 600px; margin: 0 auto; }\n" +
-                "        h1 { color: #2c3e50; }\n" +
-                "        .card { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n" +
-                "        .danger-zone { border: 2px solid #e74c3c; }\n" +
-                "        .danger-zone h3 { color: #e74c3c; margin-top: 0; }\n" +
-                "        .btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; }\n" +
-                "        .btn-danger { background: #e74c3c; color: white; }\n" +
-                "        .btn-danger:hover { background: #c0392b; }\n" +
-                "        .btn-secondary { background: #95a5a6; color: white; }\n" +
-                "        nav { margin-bottom: 20px; }\n" +
-                "        nav a { color: #3498db; margin-right: 15px; }\n" +
-                "        #message { padding: 10px; margin-bottom: 10px; border-radius: 4px; display: none; }\n" +
-                "        .success { background: #d4edda; color: #155724; }\n" +
-                "        .error { background: #f8d7da; color: #721c24; }\n" +
-                "    </style>\n" +
-                "</head>\n" +
-                "<body>\n" +
-                "    <div class=\"container\">\n" +
-                "        <nav><a href=\"/dashboard\">← Back to Dashboard</a></nav>\n" +
-                "        <h1>Settings</h1>\n" +
-                "        <div id=\"message\"></div>\n" +
-                "        <div class=\"card\">\n" +
-                "            <h3>Account Information</h3>\n" +
-                "            <p><strong>Email:</strong> <span id=\"userEmail\">Loading...</span></p>\n" +
-                "            <p><strong>Name:</strong> <span id=\"userName\">Loading...</span></p>\n" +
-                "            <p><strong>Email Verified:</strong> <span id=\"emailVerified\">Loading...</span></p>\n" +
-                "        </div>\n" +
-                "        <div class=\"card danger-zone\">\n" +
-                "            <h3>Danger Zone</h3>\n" +
-                "            <p>Permanently delete your account and all associated data. This action cannot be undone.</p>\n" +
-                "            <button id=\"deleteBtn\" class=\"btn btn-danger\" onclick=\"confirmDelete()\">Delete My Account</button>\n" +
-                "        </div>\n" +
-                "    </div>\n" +
-                "    <script>\n" +
-                "        const token = localStorage.getItem('token');\n" +
-                "        if (!token) { window.location.href = '/login'; }\n" +
-                "        \n" +
-                "        fetch('/api/auth/me', {\n" +
-                "            headers: { 'Authorization': 'Bearer ' + token }\n" +
-                "        })\n" +
-                "        .then(r => r.json())\n" +
-                "        .then(data => {\n" +
-                "            if (data.success) {\n" +
-                "                document.getElementById('userEmail').textContent = data.user.email;\n" +
-                "                document.getElementById('userName').textContent = data.user.name || '(not set)';\n" +
-                "                document.getElementById('emailVerified').textContent = data.user.emailVerified ? 'Yes' : 'No';\n" +
-                "            } else {\n" +
-                "                window.location.href = '/login';\n" +
-                "            }\n" +
-                "        });\n" +
-                "        \n" +
-                "        function confirmDelete() {\n" +
-                "            if (confirm('Are you sure you want to delete your account? This cannot be undone!')) {\n" +
-                "                if (confirm('This will permanently delete all your data. Are you REALLY sure?')) {\n" +
-                "                    fetch('/api/auth/account', {\n" +
-                "                        method: 'DELETE',\n" +
-                "                        headers: { 'Authorization': 'Bearer ' + token }\n" +
-                "                    })\n" +
-                "                    .then(r => r.json())\n" +
-                "                    .then(data => {\n" +
-                "                        if (data.success) {\n" +
-                "                            localStorage.removeItem('token');\n" +
-                "                            alert('Account deleted. Goodbye!');\n" +
-                "                            window.location.href = '/';\n" +
-                "                        } else {\n" +
-                "                            showMessage(data.error.message, 'error');\n" +
-                "                        }\n" +
-                "                    });\n" +
-                "                }\n" +
-                "            }\n" +
-                "        }\n" +
-                "        \n" +
-                "        function showMessage(msg, type) {\n" +
-                "            const el = document.getElementById('message');\n" +
-                "            el.textContent = msg;\n" +
-                "            el.className = type;\n" +
-                "            el.style.display = 'block';\n" +
-                "        }\n" +
-                "    </script>\n" +
-                "</body>\n" +
-                "</html>");
+
+            // Get user from JWT token
+            com.mybible.util.RequestContext ctx = com.mybible.util.RequestContext.fromRequest(request);
+            if (!ctx.isAuthenticated()) {
+                response.sendRedirect("/login");
+                return;
+            }
+
+            String userEmail = ctx.getEmail();
+            String userName = ctx.getName();
+            String userId = ctx.getUserId();
+
+            // Get user data from DB (name and email verified status)
+            boolean emailVerified = false;
+            try {
+                com.esarks.arm.model.jeo.ServiceJeo findJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                findJeo.getRequest().setWhereClause("ID = '" + userId.replace("'", "''") + "'");
+                authUsersCrud.readAUTH_USERS(findJeo);
+                if (findJeo.getReply() != null && findJeo.getReply().getJeoSize() > 0) {
+                    com.mybible.data.AUTH_USERS user = (com.mybible.data.AUTH_USERS) findJeo.getReply().getJeoAt(0);
+                    emailVerified = user.getEMAIL_VERIFIED();
+                    String dbName = user.getNAME();
+                    if (userName == null || userName.isEmpty()) {
+                        userName = dbName;
+                    }
+                }
+            } catch (Exception e) {
+                System.out.println("[SETTINGS] Error getting user: " + e.getMessage());
+            }
+
+            // Ensure userName has a displayable value
+            if (userName == null || userName.isEmpty()) {
+                userName = "My Account";
+            }
+
+            System.out.println("[SETTINGS] Rendering settings page for: " + userEmail + " (name: " + userName + ")");
+
+            // Escape name for JS (like AllowanceAlley does for familyName)
+            String jsEscapedName = userName.replace("\\", "\\\\").replace("'", "\\'").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r");
+
+            response.setContentType("text/html;charset=UTF-8");
+            java.io.PrintWriter out = response.getWriter();
+
+            out.println("<!DOCTYPE html>");
+            out.println("<html><head>");
+            out.println("  <title>Settings - MyBible</title>");
+            out.println("  <meta name='viewport' content='width=device-width, initial-scale=1.0'>");
+            out.println("  <style>");
+            out.println("    * { margin: 0; padding: 0; box-sizing: border-box; }");
+            out.println("    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background: #f5f7fb; }");
+            out.println("    .header { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 20px; }");
+            out.println("    .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }");
+            out.println("    .header h1 { font-size: 24px; }");
+            out.println("    .header-right { display: flex; align-items: center; gap: 15px; }");
+            out.println("    .header-right button { background: rgba(255,255,255,0.2); border: none; color: white; padding: 10px 20px; border-radius: 6px; cursor: pointer; }");
+            out.println("    .header-right button:hover { background: rgba(255,255,255,0.3); }");
+            out.println("    .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }");
+            out.println("    .section { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); padding: 30px; margin-bottom: 30px; }");
+            out.println("    .section h2 { color: #333; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }");
+            out.println("    .section p { color: #666; margin-bottom: 15px; line-height: 1.6; }");
+            out.println("    .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }");
+            out.println("    .btn-danger { background: #dc3545; color: white; }");
+            out.println("    .btn-danger:hover { background: #c82333; }");
+            out.println("    .btn-secondary { background: #6c757d; color: white; margin-left: 10px; }");
+            out.println("    .btn-secondary:hover { background: #5a6268; }");
+            out.println("    .danger-zone { border: 2px solid #dc3545; background: #fff5f5; }");
+            out.println("    .danger-zone h2 { color: #dc3545; }");
+            out.println("    .warning-box { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #856404; }");
+            out.println("    .confirm-delete { display: none; margin-top: 20px; padding: 20px; background: #f8d7da; border-radius: 8px; }");
+            out.println("    .confirm-delete.show { display: block; }");
+            out.println("    .confirm-delete input[type='text'] { width: 100%; max-width: 300px; padding: 12px 16px; border: 2px solid #dc3545; border-radius: 8px; font-size: 16px; margin: 10px 0; }");
+            out.println("    .success-message { background: #d4edda; border: 1px solid #28a745; color: #155724; padding: 15px; border-radius: 8px; margin-bottom: 20px; }");
+            out.println("    .error-message { background: #f8d7da; border: 1px solid #dc3545; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; }");
+            out.println("    code { background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-family: monospace; }");
+            out.println("  </style>");
+            out.println("</head><body>");
+
+            // Header like AllowanceAlley
+            out.println("<div class='header'>");
+            out.println("  <div class='header-content'>");
+            out.println("    <h1>Settings</h1>");
+            out.println("    <div class='header-right'>");
+            out.println("      <div style='text-align: right;'>");
+            out.println("        <div style='font-weight: 600;'>" + escapeHtml(userName) + "</div>");
+            out.println("        <div style='font-size: 12px; opacity: 0.8;'>" + escapeHtml(userEmail) + "</div>");
+            out.println("      </div>");
+            out.println("      <button onclick=\"window.location.href='/dashboard'\">Dashboard</button>");
+            out.println("    </div>");
+            out.println("  </div>");
+            out.println("</div>");
+
+            out.println("<div class='container'>");
+
+            // Check for success/error messages
+            String error = request.getParameter("error");
+            if (error != null) {
+                if ("name_mismatch".equals(error)) {
+                    out.println("<div class='error-message'>Name does not match. Please type your exact account name to confirm deletion.</div>");
+                } else {
+                    out.println("<div class='error-message'>Error: " + escapeHtml(error) + "</div>");
+                }
+            }
+
+            // Account Information Section
+            out.println("<div class='section'>");
+            out.println("  <h2>Account Information</h2>");
+            out.println("  <p><strong>Name:</strong> " + escapeHtml(userName) + "</p>");
+            out.println("  <p><strong>Email:</strong> " + escapeHtml(userEmail) + "</p>");
+            out.println("  <p><strong>Email Verified:</strong> " + (emailVerified ? "Yes" : "No") + "</p>");
+            out.println("</div>");
+
+            // Danger Zone - Delete Account (EXACTLY like AllowanceAlley)
+            out.println("<div class='section danger-zone'>");
+            out.println("  <h2>Danger Zone</h2>");
+            out.println("  <div class='warning-box'>");
+            out.println("    <strong>Warning:</strong> Deleting your account is permanent and cannot be undone. All your notes, bookmarks, highlights, and reading progress will be permanently deleted.");
+            out.println("  </div>");
+            out.println("  <p>To delete your account, click the button below and confirm by typing your account name.</p>");
+            out.println("  <button type='button' class='btn btn-danger' onclick='showDeleteConfirm()'>Delete My Account</button>");
+            out.println("  <div id='confirmDelete' class='confirm-delete'>");
+            out.println("    <form method='POST' action='/settings' onsubmit='return validateDelete()'>");
+            out.println("      <input type='hidden' name='action' value='deleteAccount'>");
+            out.println("      <p><strong>To confirm, type your account name:</strong> <code>" + escapeHtml(userName) + "</code></p>");
+            out.println("      <input type='text' id='confirmName' name='confirmName' placeholder='Type account name to confirm' autocomplete='off'>");
+            out.println("      <br>");
+            out.println("      <button type='submit' class='btn btn-danger'>Permanently Delete Account</button>");
+            out.println("      <button type='button' class='btn btn-secondary' onclick='hideDeleteConfirm()'>Cancel</button>");
+            out.println("    </form>");
+            out.println("  </div>");
+            out.println("</div>");
+
+            out.println("</div>"); // container
+
+            // JavaScript - exactly like AllowanceAlley
+            out.println("<script>");
+            out.println("  function showDeleteConfirm() {");
+            out.println("    document.getElementById('confirmDelete').classList.add('show');");
+            out.println("  }");
+            out.println("  function hideDeleteConfirm() {");
+            out.println("    document.getElementById('confirmDelete').classList.remove('show');");
+            out.println("    document.getElementById('confirmName').value = '';");
+            out.println("  }");
+            out.println("  function validateDelete() {");
+            out.println("    var input = document.getElementById('confirmName').value.trim();");
+            out.println("    var expected = '" + jsEscapedName + "';");
+            out.println("    console.log('Comparing input:', input, 'with expected:', expected);");
+            out.println("    if (input !== expected) {");
+            out.println("      alert('Account name does not match. Please type: ' + expected);");
+            out.println("      return false;");
+            out.println("    }");
+            out.println("    return confirm('Are you absolutely sure? This action CANNOT be undone!');");
+            out.println("  }");
+            out.println("</script>");
+
+            out.println("</body></html>");
+        }
+
+        @Override
+        protected void doPost(jakarta.servlet.http.HttpServletRequest request,
+                             jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+
+            com.mybible.util.RequestContext ctx = com.mybible.util.RequestContext.fromRequest(request);
+            if (!ctx.isAuthenticated()) {
+                response.sendRedirect("/login");
+                return;
+            }
+
+            String action = request.getParameter("action");
+            String userId = ctx.getUserId();
+            String userEmail = ctx.getEmail();
+
+            if ("deleteAccount".equals(action)) {
+                String confirmName = request.getParameter("confirmName");
+
+                // Get user's actual name from DB (for confirmation validation)
+                String actualName = null;
+                try {
+                    com.esarks.arm.model.jeo.ServiceJeo findJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                    findJeo.getRequest().setWhereClause("ID = '" + userId.replace("'", "''") + "'");
+                    authUsersCrud.readAUTH_USERS(findJeo);
+
+                    if (findJeo.getReply() != null && findJeo.getReply().getJeoSize() > 0) {
+                        com.mybible.data.AUTH_USERS user = (com.mybible.data.AUTH_USERS) findJeo.getReply().getJeoAt(0);
+                        actualName = user.getNAME();
+                    }
+                } catch (Exception e) {
+                    System.out.println("[SETTINGS DELETE] Error getting user: " + e.getMessage());
+                }
+
+                if (actualName == null || actualName.isEmpty()) {
+                    actualName = "My Account";
+                }
+
+                // Verify name matches (like AllowanceAlley verifies family name)
+                System.out.println("[SETTINGS DELETE] confirmName='" + confirmName + "', actualName='" + actualName + "'");
+                if (confirmName == null || !confirmName.trim().equals(actualName)) {
+                    System.out.println("[SETTINGS DELETE] Name mismatch: expected=" + actualName + ", got=" + confirmName);
+                    response.sendRedirect("/settings?error=name_mismatch");
+                    return;
+                }
+
+                System.out.println("[SETTINGS DELETE] Starting account deletion for: " + userEmail + " (ID: " + userId + ")");
+
+                try {
+                    // Use setSelectClause pattern (like AllowanceAlley does for cascade delete)
+                    String deleteSql = "DELETE FROM auth_users WHERE ID = '" + userId.replace("'", "''") + "'";
+                    com.esarks.arm.model.jeo.ServiceJeo deleteJeo = new com.esarks.arm.model.jeo.ServiceJeo();
+                    deleteJeo.getRequest().setSelectClause(deleteSql);
+                    deleteJeo.getRequest().setWhereClause("1=1");
+                    authUsersCrud.deleteAUTH_USERS(deleteJeo);
+
+                    System.out.println("[SETTINGS DELETE] Account deleted successfully: " + userEmail);
+
+                    // Clear token cookie if set
+                    jakarta.servlet.http.Cookie authCookie = new jakarta.servlet.http.Cookie("auth_token", "");
+                    authCookie.setPath("/");
+                    authCookie.setMaxAge(0);
+                    authCookie.setHttpOnly(true);
+                    response.addCookie(authCookie);
+
+                    // Redirect to home with message
+                    response.sendRedirect("/?deleted=true");
+
+                } catch (Exception e) {
+                    System.out.println("[SETTINGS DELETE] Error: " + e.getMessage());
+                    e.printStackTrace();
+                    response.sendRedirect("/settings?error=delete_failed");
+                }
+            } else {
+                response.sendRedirect("/settings");
+            }
+        }
+
+        private String escapeHtml(String input) {
+            if (input == null) return "";
+            return input.replace("&", "&amp;")
+                        .replace("<", "&lt;")
+                        .replace(">", "&gt;")
+                        .replace("\"", "&quot;")
+                        .replace("'", "&#x27;");
         }
     }
 ), "/settings");
@@ -1243,6 +1478,697 @@ context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
         }
     }
 ), "/verify-email");
+
+// ========================================================================
+// BIBLE API - GET /api/bible/translations
+// ========================================================================
+System.out.println("[SERVER] Adding /api/bible/translations endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                           jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            java.util.List<com.mybible.util.BibleService.TranslationMetadata> translations =
+                bibleService.getTranslations();
+
+            StringBuilder json = new StringBuilder();
+            json.append("{\"translations\":[");
+            boolean first = true;
+            for (com.mybible.util.BibleService.TranslationMetadata t : translations) {
+                if (!first) json.append(",");
+                first = false;
+                json.append("{\"code\":\"").append(t.code).append("\",");
+                json.append("\"name\":\"").append(escapeJson(t.name)).append("\",");
+                json.append("\"shortName\":\"").append(escapeJson(t.shortName)).append("\",");
+                json.append("\"year\":\"").append(escapeJson(t.year)).append("\"}");
+            }
+            json.append("]}");
+
+            response.getWriter().write(json.toString());
+        }
+
+        private String escapeJson(String s) {
+            if (s == null) return "";
+            return s.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
+        }
+    }
+), "/api/bible/translations");
+
+// ========================================================================
+// BIBLE API - GET /api/bible/books
+// ========================================================================
+System.out.println("[SERVER] Adding /api/bible/books endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                           jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            String translation = request.getParameter("translation");
+            if (translation == null || translation.isEmpty()) {
+                translation = "kjv";
+            }
+
+            java.util.List<String> books = bibleService.getBooks(translation);
+
+            StringBuilder json = new StringBuilder();
+            json.append("{\"translation\":\"").append(translation).append("\",\"books\":[");
+            boolean first = true;
+            for (String book : books) {
+                if (!first) json.append(",");
+                first = false;
+                int chapters = bibleService.getChapterCount(translation, book);
+                json.append("{\"name\":\"").append(book).append("\",\"chapters\":").append(chapters).append("}");
+            }
+            json.append("]}");
+
+            response.getWriter().write(json.toString());
+        }
+    }
+), "/api/bible/books");
+
+// ========================================================================
+// BIBLE API - GET /api/bible/chapter
+// ========================================================================
+System.out.println("[SERVER] Adding /api/bible/chapter endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                           jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            String translation = request.getParameter("translation");
+            String book = request.getParameter("book");
+            String chapterStr = request.getParameter("chapter");
+
+            if (translation == null || translation.isEmpty()) {
+                translation = "kjv";
+            }
+
+            if (book == null || book.isEmpty()) {
+                response.setStatus(400);
+                response.getWriter().write("{\"error\":{\"message\":\"Missing book parameter\"}}");
+                return;
+            }
+
+            int chapter = 1;
+            if (chapterStr != null && !chapterStr.isEmpty()) {
+                try {
+                    chapter = Integer.parseInt(chapterStr);
+                } catch (NumberFormatException e) {
+                    chapter = 1;
+                }
+            }
+
+            java.util.List<com.mybible.util.BibleService.Verse> verses =
+                bibleService.getChapter(translation, book, chapter);
+
+            StringBuilder json = new StringBuilder();
+            json.append("{\"translation\":\"").append(translation).append("\",");
+            json.append("\"book\":\"").append(book).append("\",");
+            json.append("\"chapter\":").append(chapter).append(",");
+            json.append("\"verses\":[");
+
+            boolean first = true;
+            for (com.mybible.util.BibleService.Verse v : verses) {
+                if (!first) json.append(",");
+                first = false;
+                json.append("{\"verse\":").append(v.verse).append(",");
+                json.append("\"text\":\"").append(escapeJson(v.text)).append("\"}");
+            }
+            json.append("]}");
+
+            response.getWriter().write(json.toString());
+        }
+
+        private String escapeJson(String s) {
+            if (s == null) return "";
+            return s.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
+        }
+    }
+), "/api/bible/chapter");
+
+// ========================================================================
+// BIBLE API - GET /api/bible/search
+// ========================================================================
+System.out.println("[SERVER] Adding /api/bible/search endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                           jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            String translation = request.getParameter("translation");
+            String query = request.getParameter("q");
+            String limitStr = request.getParameter("limit");
+
+            if (translation == null || translation.isEmpty()) {
+                translation = "kjv";
+            }
+
+            if (query == null || query.isEmpty()) {
+                response.setStatus(400);
+                response.getWriter().write("{\"error\":{\"message\":\"Missing q (query) parameter\"}}");
+                return;
+            }
+
+            int limit = 50;
+            if (limitStr != null && !limitStr.isEmpty()) {
+                try {
+                    limit = Integer.parseInt(limitStr);
+                    if (limit > 200) limit = 200;
+                    if (limit < 1) limit = 1;
+                } catch (NumberFormatException e) {
+                    limit = 50;
+                }
+            }
+
+            java.util.List<com.mybible.util.BibleService.Verse> results =
+                bibleService.search(translation, query, limit);
+
+            StringBuilder json = new StringBuilder();
+            json.append("{\"translation\":\"").append(translation).append("\",");
+            json.append("\"query\":\"").append(escapeJson(query)).append("\",");
+            json.append("\"count\":").append(results.size()).append(",");
+            json.append("\"results\":[");
+
+            boolean first = true;
+            for (com.mybible.util.BibleService.Verse v : results) {
+                if (!first) json.append(",");
+                first = false;
+                json.append("{\"book\":\"").append(v.book).append("\",");
+                json.append("\"chapter\":").append(v.chapter).append(",");
+                json.append("\"verse\":").append(v.verse).append(",");
+                json.append("\"text\":\"").append(escapeJson(v.text)).append("\"}");
+            }
+            json.append("]}");
+
+            response.getWriter().write(json.toString());
+        }
+
+        private String escapeJson(String s) {
+            if (s == null) return "";
+            return s.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
+        }
+    }
+), "/api/bible/search");
+
+// ========================================================================
+// EXTERNAL BIBLE API - GET /api/bible/external/translations
+// Returns list of available translations from api.bible (NIV, ESV, NLT, etc.)
+// ========================================================================
+System.out.println("[SERVER] Adding /api/bible/external/translations endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                           jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            if (!apiBibleService.isConfigured()) {
+                response.setStatus(503);
+                response.getWriter().write("{\"error\":{\"message\":\"External Bible API not configured\"}}");
+                return;
+            }
+
+            try {
+                java.util.List<com.mybible.util.ApiBibleService.BibleInfo> bibles =
+                    apiBibleService.getBibles();
+
+                StringBuilder json = new StringBuilder();
+                json.append("{\"translations\":[");
+                boolean first = true;
+                for (com.mybible.util.ApiBibleService.BibleInfo b : bibles) {
+                    if (!first) json.append(",");
+                    first = false;
+                    json.append("{\"id\":\"").append(escapeJson(b.id)).append("\",");
+                    json.append("\"name\":\"").append(escapeJson(b.name)).append("\",");
+                    json.append("\"abbreviation\":\"").append(escapeJson(b.abbreviation)).append("\",");
+                    json.append("\"source\":\"api.bible\"}");
+                }
+                json.append("]}");
+
+                response.getWriter().write(json.toString());
+            } catch (Exception e) {
+                response.setStatus(500);
+                response.getWriter().write("{\"error\":{\"message\":\"" + escapeJson(e.getMessage()) + "\"}}");
+            }
+        }
+
+        private String escapeJson(String s) {
+            if (s == null) return "";
+            return s.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
+        }
+    }
+), "/api/bible/external/translations");
+
+// ========================================================================
+// EXTERNAL BIBLE API - GET /api/bible/external/passage
+// Get passage from api.bible (NIV, ESV, etc.)
+// Params: bibleId, book, chapter (or passageId for direct reference)
+// ========================================================================
+System.out.println("[SERVER] Adding /api/bible/external/passage endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                           jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("application/json");
+
+            if (!apiBibleService.isConfigured()) {
+                response.setStatus(503);
+                response.getWriter().write("{\"error\":{\"message\":\"External Bible API not configured\"}}");
+                return;
+            }
+
+            String bibleId = request.getParameter("bibleId");
+            String passageId = request.getParameter("passageId");
+            String book = request.getParameter("book");
+            String chapterStr = request.getParameter("chapter");
+
+            if (bibleId == null || bibleId.isEmpty()) {
+                response.setStatus(400);
+                response.getWriter().write("{\"error\":{\"message\":\"Missing bibleId parameter\"}}");
+                return;
+            }
+
+            // Build passageId from book + chapter if not provided directly
+            if (passageId == null || passageId.isEmpty()) {
+                if (book == null || book.isEmpty()) {
+                    response.setStatus(400);
+                    response.getWriter().write("{\"error\":{\"message\":\"Missing book or passageId parameter\"}}");
+                    return;
+                }
+                String bookId = com.mybible.util.ApiBibleService.bookNameToId(book);
+                int chapter = 1;
+                if (chapterStr != null && !chapterStr.isEmpty()) {
+                    try { chapter = Integer.parseInt(chapterStr); } catch (NumberFormatException e) { chapter = 1; }
+                }
+                passageId = bookId + "." + chapter;
+            }
+
+            try {
+                com.mybible.util.ApiBibleService.PassageContent passage =
+                    apiBibleService.getPassage(bibleId, passageId);
+
+                if (passage == null) {
+                    response.setStatus(404);
+                    response.getWriter().write("{\"error\":{\"message\":\"Passage not found\"}}");
+                    return;
+                }
+
+                StringBuilder json = new StringBuilder();
+                json.append("{\"bibleId\":\"").append(escapeJson(bibleId)).append("\",");
+                json.append("\"passageId\":\"").append(escapeJson(passage.id)).append("\",");
+                json.append("\"reference\":\"").append(escapeJson(passage.reference)).append("\",");
+                json.append("\"content\":\"").append(escapeJson(passage.content)).append("\",");
+                json.append("\"source\":\"api.bible\"}");
+
+                response.getWriter().write(json.toString());
+            } catch (Exception e) {
+                response.setStatus(500);
+                response.getWriter().write("{\"error\":{\"message\":\"" + escapeJson(e.getMessage()) + "\"}}");
+            }
+        }
+
+        private String escapeJson(String s) {
+            if (s == null) return "";
+            return s.replace("\\", "\\\\")
+                    .replace("\"", "\\\"")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t");
+        }
+    }
+), "/api/bible/external/passage");
+
+// ========================================================================
+// SCRIPTURE READING PAGE - GET /read
+// Supports both local JSON translations and external api.bible translations
+// Translation format: "local:kjv" or "api:bibleId"
+// ========================================================================
+System.out.println("[SERVER] Adding /read endpoint");
+context.addServlet(new org.eclipse.jetty.ee10.servlet.ServletHolder(
+    new jakarta.servlet.http.HttpServlet() {
+        @Override
+        protected void doGet(jakarta.servlet.http.HttpServletRequest request,
+                           jakarta.servlet.http.HttpServletResponse response)
+                throws jakarta.servlet.ServletException, java.io.IOException {
+            response.setContentType("text/html");
+
+            // Get URL parameters for initial state
+            String translation = request.getParameter("t");
+            String book = request.getParameter("b");
+            String chapterStr = request.getParameter("c");
+
+            // Default values
+            if (translation == null || translation.isEmpty()) translation = "local:kjv";
+            if (book == null || book.isEmpty()) book = "Genesis";
+            int chapter = 1;
+            if (chapterStr != null && !chapterStr.isEmpty()) {
+                try { chapter = Integer.parseInt(chapterStr); } catch (NumberFormatException e) { chapter = 1; }
+            }
+
+            // Determine source (local JSON or API)
+            boolean isApiSource = translation.startsWith("api:");
+            String sourceCode = translation.contains(":") ? translation.substring(translation.indexOf(":") + 1) : translation;
+
+            // Get standard books list and chapter count (same for all translations)
+            java.util.List<String> defaultBooks = java.util.Arrays.asList(com.mybible.util.BibleService.BOOK_ORDER);
+            int maxChapters = com.mybible.util.BibleService.getStandardChapterCount(book);
+            if (maxChapters == 0) maxChapters = 50; // fallback
+
+            // Build content based on source
+            String versesHtml = "";
+            String translationDisplayName = sourceCode.toUpperCase();
+            String sourceLabel = isApiSource ? "API" : "JSON";
+
+            if (isApiSource) {
+                // Fetch from api.bible
+                if (!apiBibleService.isConfigured()) {
+                    versesHtml = "<div class=\"verse\"><span class=\"verse-text\" style=\"color: #e74c3c;\">API Bible service is not configured. The API_BIBLE_KEY environment variable is not set.</span></div>";
+                } else {
+                    try {
+                        String bookId = com.mybible.util.ApiBibleService.bookNameToId(book);
+                        String passageId = bookId + "." + chapter;
+                        com.mybible.util.ApiBibleService.PassageContent passage =
+                            apiBibleService.getPassage(sourceCode, passageId);
+
+                        if (passage != null && passage.content != null) {
+                            // API returns text with verse numbers embedded like [1], [2], etc.
+                            versesHtml = buildApiVerses(passage.content);
+                            translationDisplayName = passage.reference != null ? passage.reference.split(" ")[0] : sourceCode;
+                        } else {
+                            versesHtml = "<div class=\"verse\"><span class=\"verse-text\">Unable to load passage from API. The passage may not be available for this translation.</span></div>";
+                        }
+                    } catch (Exception e) {
+                        versesHtml = "<div class=\"verse\"><span class=\"verse-text\">Error loading from API: " + escapeHtml(e.getMessage()) + "</span></div>";
+                    }
+                }
+            } else {
+                // Fetch from local JSON
+                String localCode = sourceCode;
+                if (translation.startsWith("local:")) {
+                    localCode = sourceCode;
+                } else if (!translation.contains(":")) {
+                    // Legacy format without prefix - assume local
+                    localCode = translation;
+                    translation = "local:" + translation;
+                }
+
+                java.util.List<com.mybible.util.BibleService.Verse> verses =
+                    bibleService.getChapter(localCode, book, chapter);
+
+                if (verses != null && !verses.isEmpty()) {
+                    versesHtml = buildLocalVerses(verses);
+                } else {
+                    versesHtml = "<div class=\"verse\"><span class=\"verse-text\">No verses found for this chapter.</span></div>";
+                }
+
+                // Get display name from local translations
+                java.util.List<com.mybible.util.BibleService.TranslationMetadata> localTranslations = bibleService.getTranslations();
+                for (com.mybible.util.BibleService.TranslationMetadata t : localTranslations) {
+                    if (t.code.equals(localCode)) {
+                        translationDisplayName = t.shortName;
+                        break;
+                    }
+                }
+            }
+
+            // Build translation options (local + API)
+            String translationOptions = buildAllTranslationOptions(translation);
+
+            response.setStatus(200);
+            response.getWriter().write("<!DOCTYPE html>\n" +
+                "<html lang=\"en\">\n" +
+                "<head>\n" +
+                "    <meta charset=\"UTF-8\">\n" +
+                "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=yes\">\n" +
+                "    <title>" + escapeHtml(book) + " " + chapter + " (" + escapeHtml(translationDisplayName) + ") - MyBible</title>\n" +
+                "    <style>\n" +
+                "        * { box-sizing: border-box; }\n" +
+                "        body { font-family: Georgia, 'Times New Roman', serif; margin: 0; padding: 0; background: #faf8f5; color: #2c2c2c; }\n" +
+                "        .header { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); color: white; padding: 15px 20px; position: sticky; top: 0; z-index: 100; }\n" +
+                "        .header-content { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap; }\n" +
+                "        .logo { font-size: 20px; font-weight: bold; text-decoration: none; color: white; }\n" +
+                "        .nav-links { display: flex; gap: 15px; }\n" +
+                "        .nav-links a { color: rgba(255,255,255,0.8); text-decoration: none; font-size: 14px; }\n" +
+                "        .nav-links a:hover { color: white; }\n" +
+                "        .controls { background: white; padding: 15px 20px; border-bottom: 1px solid #e0ddd8; position: sticky; top: 60px; z-index: 99; }\n" +
+                "        .controls-content { max-width: 900px; margin: 0 auto; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }\n" +
+                "        select, input { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; background: white; }\n" +
+                "        select { cursor: pointer; }\n" +
+                "        .btn-nav { padding: 8px 16px; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }\n" +
+                "        .btn-nav:hover { background: #2980b9; }\n" +
+                "        .btn-nav:disabled { background: #bdc3c7; cursor: not-allowed; }\n" +
+                "        .content { max-width: 900px; margin: 0 auto; padding: 30px 20px; }\n" +
+                "        .chapter-title { font-size: 28px; color: #2c3e50; margin-bottom: 5px; text-align: center; }\n" +
+                "        .source-badge { text-align: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #3498db; }\n" +
+                "        .source-badge span { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-family: sans-serif; }\n" +
+                "        .source-json { background: #27ae60; color: white; }\n" +
+                "        .source-api { background: #9b59b6; color: white; }\n" +
+                "        .verses { line-height: 1.9; font-size: 18px; }\n" +
+                "        .verse { margin-bottom: 8px; }\n" +
+                "        .verse-num { color: #3498db; font-size: 12px; vertical-align: super; margin-right: 3px; font-weight: bold; }\n" +
+                "        .verse-text { }\n" +
+                "        .chapter-nav { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0ddd8; }\n" +
+                "        .copyright { margin-top: 30px; padding: 15px; background: #f0f0f0; border-radius: 8px; font-size: 12px; color: #666; font-family: sans-serif; }\n" +
+                "        @media (max-width: 600px) {\n" +
+                "            .header-content { flex-direction: column; align-items: flex-start; }\n" +
+                "            .controls-content { flex-direction: column; align-items: stretch; }\n" +
+                "            select { width: 100%; }\n" +
+                "            .verses { font-size: 16px; }\n" +
+                "        }\n" +
+                "    </style>\n" +
+                "</head>\n" +
+                "<body>\n" +
+                "    <div class=\"header\">\n" +
+                "        <div class=\"header-content\">\n" +
+                "            <a href=\"/\" class=\"logo\">MyBible</a>\n" +
+                "            <div class=\"nav-links\">\n" +
+                "                <a href=\"/dashboard\">Dashboard</a>\n" +
+                "                <a href=\"/read\">Read</a>\n" +
+                "            </div>\n" +
+                "        </div>\n" +
+                "    </div>\n" +
+                "    <div class=\"controls\">\n" +
+                "        <div class=\"controls-content\">\n" +
+                "            <select id=\"translationSelect\" onchange=\"updatePage()\">\n" +
+                translationOptions +
+                "            </select>\n" +
+                "            <select id=\"bookSelect\" onchange=\"bookChanged()\">\n" +
+                buildBookOptions(defaultBooks, book) +
+                "            </select>\n" +
+                "            <select id=\"chapterSelect\" onchange=\"updatePage()\">\n" +
+                buildChapterOptions(maxChapters, chapter) +
+                "            </select>\n" +
+                "            <button class=\"btn-nav\" onclick=\"prevChapter()\" " + (chapter <= 1 ? "disabled" : "") + ">Prev</button>\n" +
+                "            <button class=\"btn-nav\" onclick=\"nextChapter()\" " + (chapter >= maxChapters ? "disabled" : "") + ">Next</button>\n" +
+                "        </div>\n" +
+                "    </div>\n" +
+                "    <div class=\"content\">\n" +
+                "        <h1 class=\"chapter-title\">" + escapeHtml(book) + " " + chapter + "</h1>\n" +
+                "        <div class=\"source-badge\"><span class=\"" + (isApiSource ? "source-api" : "source-json") + "\">" + sourceLabel + "</span></div>\n" +
+                "        <div class=\"verses\">\n" +
+                versesHtml +
+                "        </div>\n" +
+                "        <div class=\"chapter-nav\">\n" +
+                "            <button class=\"btn-nav\" onclick=\"prevChapter()\" " + (chapter <= 1 ? "disabled" : "") + ">Previous Chapter</button>\n" +
+                "            <button class=\"btn-nav\" onclick=\"nextChapter()\" " + (chapter >= maxChapters ? "disabled" : "") + ">Next Chapter</button>\n" +
+                "        </div>\n" +
+                (isApiSource ? "        <div class=\"copyright\">Content provided by api.bible. Scripture quotations are subject to the respective translation's copyright.</div>\n" : "") +
+                "    </div>\n" +
+                "    <script>\n" +
+                "        const maxChapters = " + maxChapters + ";\n" +
+                "        \n" +
+                "        function updatePage() {\n" +
+                "            const t = document.getElementById('translationSelect').value;\n" +
+                "            const b = document.getElementById('bookSelect').value;\n" +
+                "            const c = document.getElementById('chapterSelect').value;\n" +
+                "            window.location.href = '/read?t=' + encodeURIComponent(t) + '&b=' + encodeURIComponent(b) + '&c=' + c;\n" +
+                "        }\n" +
+                "        \n" +
+                "        function bookChanged() {\n" +
+                "            const t = document.getElementById('translationSelect').value;\n" +
+                "            const b = document.getElementById('bookSelect').value;\n" +
+                "            window.location.href = '/read?t=' + encodeURIComponent(t) + '&b=' + encodeURIComponent(b) + '&c=1';\n" +
+                "        }\n" +
+                "        \n" +
+                "        function prevChapter() {\n" +
+                "            const c = parseInt(document.getElementById('chapterSelect').value);\n" +
+                "            if (c > 1) {\n" +
+                "                document.getElementById('chapterSelect').value = c - 1;\n" +
+                "                updatePage();\n" +
+                "            }\n" +
+                "        }\n" +
+                "        \n" +
+                "        function nextChapter() {\n" +
+                "            const c = parseInt(document.getElementById('chapterSelect').value);\n" +
+                "            if (c < maxChapters) {\n" +
+                "                document.getElementById('chapterSelect').value = c + 1;\n" +
+                "                updatePage();\n" +
+                "            }\n" +
+                "        }\n" +
+                "    </script>\n" +
+                "</body>\n" +
+                "</html>");
+        }
+
+        private String escapeHtml(String s) {
+            if (s == null) return "";
+            return s.replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                    .replace("\"", "&quot;")
+                    .replace("'", "&#39;");
+        }
+
+        private String buildAllTranslationOptions(String selected) {
+            StringBuilder sb = new StringBuilder();
+
+            // Local JSON translations group
+            sb.append("<optgroup label=\"Local (JSON)\">\n");
+            java.util.List<com.mybible.util.BibleService.TranslationMetadata> localTranslations = bibleService.getTranslations();
+            for (com.mybible.util.BibleService.TranslationMetadata t : localTranslations) {
+                String value = "local:" + t.code;
+                sb.append("<option value=\"").append(value).append("\"");
+                if (value.equals(selected) || t.code.equals(selected)) sb.append(" selected");
+                sb.append(">").append(escapeHtml(t.shortName)).append("</option>\n");
+            }
+            sb.append("</optgroup>\n");
+
+            // API translations group - ALL available English translations from api.bible
+            sb.append("<optgroup label=\"Online (API)\">\n");
+
+            // All available translations sorted alphabetically
+            String[][] apiTranslations = {
+                {"06125adad2d5898a-01", "ASV - American Standard Version"},
+                {"685d1470fe4d5c3b-01", "ASVBT - ASV Byzantine Text w/ Apocrypha"},
+                {"bba9f40183526463-01", "BSB - Berean Standard Bible"},
+                {"55212e3cf5d04d49-01", "CPB - Cambridge Paragraph Bible KJV"},
+                {"179568874c45066f-01", "DRA - Douay-Rheims American 1899"},
+                {"55ec700d9e0d77ea-01", "EMTV - English Majority Text Version"},
+                {"2f0fd81d7b85b923-01", "F35 - English NT Family 35"},
+                {"65eec8e0b60e656b-01", "FBV - Free Bible Version"},
+                {"c315fa9f71d4af3a-01", "GNV - Geneva Bible"},
+                {"bf8f1c7f3f9045a5-01", "JPS - JPS TaNaKH 1917"},
+                {"de4e12af7f28f599-02", "KJV - King James Version"},
+                {"01b29f4b342acc35-01", "LSV - Literal Standard Version"},
+                {"6bab4d6c61b31b80-01", "LXX - Brenton Septuagint (Updated)"},
+                {"65bfdebd704a8324-01", "LXXb - Brenton Septuagint"},
+                {"ec290b5045ff54a5-01", "OKE - Targum Onkelos Etheridge"},
+                {"c89622d31b60c444-02", "OJB - Orthodox Jewish Bible"},
+                {"40072c4a5aba4022-01", "RV - Revised Version 1885"},
+                {"66c22495370cdfc0-01", "T4T - Translation for Translators"},
+                {"32339cf2f720ff8e-01", "TCENT - Text-Critical English NT"},
+                {"9879dbb7cfe39e4d-04", "WEB - World English Bible"},
+                {"7142879509583d59-04", "WEBBE - WEB British Edition"},
+                {"72f4e6dc683324df-03", "WEBU - WEB Updated"},
+                {"f72b840c855f362c-04", "WMB - World Messianic Bible"},
+                {"04da588535d2f823-04", "WMBBE - World Messianic Bible British"}
+            };
+
+            for (String[] trans : apiTranslations) {
+                String value = "api:" + trans[0];
+                sb.append("<option value=\"").append(value).append("\"");
+                if (value.equals(selected)) sb.append(" selected");
+                sb.append(">").append(escapeHtml(trans[1])).append("</option>\n");
+            }
+
+            sb.append("</optgroup>\n");
+
+            return sb.toString();
+        }
+
+        private String buildBookOptions(java.util.List<String> books, String selected) {
+            StringBuilder sb = new StringBuilder();
+            for (String b : books) {
+                sb.append("<option value=\"").append(escapeHtml(b)).append("\"");
+                if (b.equals(selected)) sb.append(" selected");
+                sb.append(">").append(escapeHtml(b)).append("</option>\n");
+            }
+            return sb.toString();
+        }
+
+        private String buildChapterOptions(int maxChapters, int selected) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 1; i <= maxChapters; i++) {
+                sb.append("<option value=\"").append(i).append("\"");
+                if (i == selected) sb.append(" selected");
+                sb.append(">Chapter ").append(i).append("</option>\n");
+            }
+            return sb.toString();
+        }
+
+        private String buildLocalVerses(java.util.List<com.mybible.util.BibleService.Verse> verses) {
+            StringBuilder sb = new StringBuilder();
+            for (com.mybible.util.BibleService.Verse v : verses) {
+                sb.append("<div class=\"verse\">");
+                sb.append("<span class=\"verse-num\">").append(v.verse).append("</span>");
+                sb.append("<span class=\"verse-text\">").append(escapeHtml(v.text)).append("</span>");
+                sb.append("</div>\n");
+            }
+            return sb.toString();
+        }
+
+        private String buildApiVerses(String content) {
+            // API returns text with verse numbers like [1], [2], etc.
+            // Parse and format them nicely
+            StringBuilder sb = new StringBuilder();
+            String[] lines = content.split("\n");
+            for (String line : lines) {
+                line = line.trim();
+                if (line.isEmpty()) continue;
+
+                // Check for verse number pattern [n]
+                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\[(\\d+)\\]\\s*(.*)");
+                java.util.regex.Matcher matcher = pattern.matcher(line);
+
+                if (matcher.find()) {
+                    String verseNum = matcher.group(1);
+                    String verseText = matcher.group(2).trim();
+                    sb.append("<div class=\"verse\">");
+                    sb.append("<span class=\"verse-num\">").append(verseNum).append("</span>");
+                    sb.append("<span class=\"verse-text\">").append(escapeHtml(verseText)).append("</span>");
+                    sb.append("</div>\n");
+                } else if (!line.isEmpty()) {
+                    // Line without verse number - append to content
+                    sb.append("<div class=\"verse\">");
+                    sb.append("<span class=\"verse-text\">").append(escapeHtml(line)).append("</span>");
+                    sb.append("</div>\n");
+                }
+            }
+            return sb.toString();
+        }
+    }
+), "/read");
 
 // ========================================================================
 // START SERVER

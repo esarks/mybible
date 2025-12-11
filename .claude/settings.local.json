@@ -10,7 +10,15 @@
       "Bash(python -m json.tool:*)",
       "Bash(python:*)",
       "Bash(python3:*)",
-      "Bash(del \"C:\\Users\\ptm\\OneDrive\\Documents\\GitHub\\ArchitectsCompanion\\jac2024\\app\\com\\mybible\\data\\ACTIVITY_LEDGER.new\" \"C:\\Users\\ptm\\OneDrive\\Documents\\GitHub\\ArchitectsCompanion\\jac2024\\app\\com\\mybible\\data\\ACTIVITY_LEDGERCrud.new\" \"C:\\Users\\ptm\\OneDrive\\Documents\\GitHub\\ArchitectsCompanion\\jac2024\\app\\com\\mybible\\data\\ACTIVITY_LEDGERCrud_Crud.new\")"
+      "Bash(del \"C:\\Users\\ptm\\OneDrive\\Documents\\GitHub\\ArchitectsCompanion\\jac2024\\app\\com\\mybible\\data\\ACTIVITY_LEDGER.new\" \"C:\\Users\\ptm\\OneDrive\\Documents\\GitHub\\ArchitectsCompanion\\jac2024\\app\\com\\mybible\\data\\ACTIVITY_LEDGERCrud.new\" \"C:\\Users\\ptm\\OneDrive\\Documents\\GitHub\\ArchitectsCompanion\\jac2024\\app\\com\\mybible\\data\\ACTIVITY_LEDGERCrud_Crud.new\")",
+      "Bash(docker images:*)",
+      "Bash(call allPhases.bat)",
+      "WebFetch(domain:docs.api.bible)",
+      "WebFetch(domain:scripture.api.bible)",
+      "WebFetch(domain:api.scripture.api.bible)",
+      "Bash(curl:*)",
+      "Bash(gcloud run services describe:*)",
+      "Bash(paste:*)"
     ]
   }
 }
