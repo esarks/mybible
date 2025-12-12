@@ -18,7 +18,8 @@
       "WebFetch(domain:api.scripture.api.bible)",
       "Bash(curl:*)",
       "Bash(gcloud run services describe:*)",
-      "Bash(paste:*)"
+      "Bash(paste:*)",
+      "Bash(gcloud sql databases list:*)"
     ]
   }
 }
